@@ -63,7 +63,7 @@ public abstract class Domain {
       description = "Surrogate key. Meant to be handled by the outside world.",
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "ed3d3509-cd6e-4a21-a021-f6826440935a")
-  @JsonProperty(value= "id", access = Access.READ_ONLY)
+  @JsonProperty(value = "id", access = Access.READ_ONLY)
   @Column(name = "external_id", nullable = false, unique = true)
   private UUID externalId;
 

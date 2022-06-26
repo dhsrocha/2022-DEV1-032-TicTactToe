@@ -1,8 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.action;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.dhsrocha.kata.tictactoe.feature.RandomStubExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -25,10 +24,26 @@ final class BitboardTest implements RandomStubExtension {
     // Act
     final var violations = VALIDATOR.getValidator().validate(stub);
     // Assert
-    assertTrue(violations.isEmpty());
+    Assertions.assertTrue(violations.isEmpty());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN stub with invalid state " //
+          + "WHEN validating " //
+          + "THEN constraint violation is generated.")
+  void invalidStates() {
+    // Arrange
+    final var invalidStub = Bitboard.of(FAKER.number().numberBetween(Integer.MIN_VALUE, -1));
+    // Act
+    final var violations = VALIDATOR.getValidator().validate(invalidStub);
+    // Assert
+    Assertions.assertFalse(violations.isEmpty());
   }
 
   static Bitboard validStub() {
-    return Bitboard.builder().state((byte) FAKER.number().randomDigit()).build();
+    final var base3 = Integer.toString(FAKER.number().randomDigit(), 3);
+    final var nineChars = base3.length() > 9 ? base3.substring(base3.length() - 9) : base3;
+    return Bitboard.of(Integer.parseInt(nineChars));
   }
 }

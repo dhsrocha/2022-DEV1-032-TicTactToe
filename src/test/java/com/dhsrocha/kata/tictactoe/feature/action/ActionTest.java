@@ -34,7 +34,7 @@ public final class ActionTest implements RandomStubExtension {
     return Action.builder()
         .player(PlayerTest.validStub())
         .game(GameTest.validStub())
-        .state(Bitboard.builder().build())
+        .state(BitboardTest.validStub())
         .build();
   }
 }
