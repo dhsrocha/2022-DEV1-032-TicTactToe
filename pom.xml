@@ -61,10 +61,10 @@
     <maven.top-level-basedir>${maven.multiModuleProjectDirectory}</maven.top-level-basedir>
 
     <version.lombok>1.18.24</version.lombok>
-    <version.mapstruct>1.5.2.Final</version.mapstruct>
     <version.errorprone>2.14.0</version.errorprone>
     <version.pmd>6.46.0</version.pmd>
     <version.plugin.test>3.0.0-M7</version.plugin.test>
+    <version.spring-doc>1.6.9</version.spring-doc>
 
     <skipTests>true</skipTests>
     <dhsrocha.author.email>dhsrocha.dev@gmail.com</dhsrocha.author.email>
@@ -197,11 +197,6 @@
         <version>${version.lombok}</version>
         <scope>provided</scope>
       </dependency>
-      <dependency>
-        <groupId>org.mapstruct</groupId>
-        <artifactId>mapstruct</artifactId>
-        <version>${version.mapstruct}</version>
-      </dependency>
       <!-- Logging -->
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -246,6 +241,11 @@
   </dependencyManagement>
 
   <dependencies>
+    <!-- Project support -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
     <!-- Testing -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -256,11 +256,7 @@
       <groupId>com.github.javafaker</groupId>
       <artifactId>javafaker</artifactId>
     </dependency>
-    <!-- Application -->
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
+    <!-- Spring -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -281,9 +277,31 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- OpenAPI -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
+      <version>${version.spring-doc}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-data-rest</artifactId>
+      <version>${version.spring-doc}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-javadoc</artifactId>
+      <version>${version.spring-doc}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -456,6 +474,7 @@
                 <failsOnError>true</failsOnError>
                 <failOnViolation>true</failOnViolation>
                 <violationSeverity>warning</violationSeverity>
+                <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
                 <resourceIncludes>**/*.properties,**/*.json,**/*.yml</resourceIncludes>
               </configuration>
             </execution>
@@ -545,6 +564,11 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${version.lombok}</version>
+              </path>
+              <path>
+                <groupId>com.github.therapi</groupId>
+                <artifactId>therapi-runtime-javadoc-scribe</artifactId>
+                <version>0.13.0</version>
               </path>
               <path>
                 <groupId>com.google.errorprone</groupId>
