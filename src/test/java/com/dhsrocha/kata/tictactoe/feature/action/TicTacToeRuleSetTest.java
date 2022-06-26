@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-@DisplayName("Test suite for Bitboard class.")
+@DisplayName("Test suite for Bitboard#TIC_TAC_TOE class.")
 final class TicTacToeRuleSetTest implements RandomStubExtension {
 
   @ParameterizedTest

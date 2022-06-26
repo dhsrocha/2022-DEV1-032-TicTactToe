@@ -57,10 +57,10 @@ class Bitboard implements Serializable, Comparable<Bitboard> {
     TIC_TAC_TOE {
       @Override
       Result calculate(final int bitboard) {
-        final var rounds = Integer.bitCount(bitboard);
         if (bitboard < 0) {
           throw new IllegalArgumentException(MSG_POSITIVE);
         }
+        final var rounds = Integer.bitCount(bitboard);
         if (rounds > 9) {
           throw new IllegalArgumentException(MSG_BITS);
         }
