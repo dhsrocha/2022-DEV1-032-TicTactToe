@@ -35,11 +35,11 @@ public class Action extends Domain implements Comparable<Action> {
 
   /** Game where this action is taken. */
   @Schema(description = "Game where this action is taken.")
-  @OneToOne
+  @OneToOne(optional = false)
   private final @NotNull @NonNull Game game;
   /** Person who did the action. */
   @Schema(description = "Person who did the action.")
-  @OneToOne
+  @OneToOne(optional = false)
   private final @NotNull @NonNull Player player;
   /** Represents the game board state in bitboard notation. */
   @Schema(description = "Represents the game board position in bitboard notation.")

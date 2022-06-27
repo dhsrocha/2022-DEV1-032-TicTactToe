@@ -293,7 +293,6 @@
          ./mvnw fr.jcgay.maven.plugins:buildplan-maven-plugin:list \
                 -Dbuildplan.tasks=clean,install,deploy
     -->
-    <defaultGoal>validate</defaultGoal>
     <pluginManagement>
       <plugins>
         <!-- Sanitization / Documentation / Reporting -->
@@ -446,6 +445,7 @@
           </dependencies>
           <executions>
             <execution>
+              <id>dhsrocha-checkstyle-check</id>
               <phase>validate</phase>
               <goals>
                 <goal>check</goal>
@@ -478,10 +478,9 @@
           </configuration>
           <executions>
             <execution>
-              <id>default-spotbugs-check</id>
+              <id>dhsrocha-spotbugs-check</id>
               <phase>validate</phase>
               <goals>
-                <goal>check</goal>
                 <goal>spotbugs</goal>
               </goals>
             </execution>
@@ -710,6 +709,7 @@
         <skipTests>false</skipTests>
       </properties>
       <build>
+        <defaultGoal>clean test</defaultGoal>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>

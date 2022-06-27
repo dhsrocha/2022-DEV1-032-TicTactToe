@@ -4,7 +4,6 @@ import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,6 +19,7 @@ import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Singular;
 
 /**
  * Represents a person who is playing a {@link Game}.
@@ -43,10 +43,13 @@ public class Player extends Domain implements Comparable<Player> {
   private static final int MAX_LENGTH = 20;
   /** Comparison criteria. */
   private static final Comparator<Player> COMPARATOR =
-      Comparator.comparing(Player::isActive).thenComparing(Player::getUsername);
+      Comparator.comparing(Player::isActive)
+          .thenComparing(Player::getUsername)
+          .thenComparing(p -> p.games.size());
 
   /** Indicates allowance to perform actions on the system. */
   @Schema(description = "Indicates allowance to perform actions on the system.", example = "false")
+  @Column(nullable = false)
   private final boolean active;
   /** Human-readable identification. */
   @Schema(
@@ -61,7 +64,7 @@ public class Player extends Domain implements Comparable<Player> {
   /** Game being or already played. */
   @Schema(description = "Game being or already played.")
   @OneToMany(cascade = CascadeType.ALL)
-  private final @NotNull @Builder.Default Set<Game> games = new HashSet<>();
+  private final @Singular @NotNull @NotNull Set<@NotNull Game> games = Set.of();
 
   @Override
   public final int compareTo(@lombok.NonNull final Player toCompare) {

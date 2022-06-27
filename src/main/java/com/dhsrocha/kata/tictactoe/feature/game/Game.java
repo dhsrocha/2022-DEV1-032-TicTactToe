@@ -5,7 +5,6 @@ import com.dhsrocha.kata.tictactoe.feature.action.Action;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -19,6 +18,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Singular;
 
 /**
  * Holds a match between two {@link Player} entities.
@@ -63,7 +63,7 @@ public class Game extends Domain implements Comparable<Game> {
   /** Actions occurred in the current game. */
   @Schema(description = "Actions occurred in the current game.")
   @OneToMany(cascade = CascadeType.ALL)
-  private final @NotNull @Builder.Default Set<@NotNull Action> actions = new HashSet<>();
+  private final @Singular @NotNull @NonNull Set<@NotNull Action> actions = Set.of();
 
   @Override
   public final int compareTo(@NonNull final Game toCompare) {
