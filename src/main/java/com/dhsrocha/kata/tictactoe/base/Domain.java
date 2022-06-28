@@ -1,5 +1,6 @@
 package com.dhsrocha.kata.tictactoe.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,17 +8,21 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.UUID;
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.validation.constraints.PastOrPresent;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * Abstraction for the domain layer.<br>
@@ -48,14 +53,26 @@ import lombok.Setter;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Setter(AccessLevel.NONE)
-public abstract class Domain {
+@EqualsAndHashCode(callSuper = true)
+public abstract class Domain extends AbstractPersistable<Long> {
 
-  /** Record's primary key. Meant to be hidden from the outside world. */
-  @Schema(hidden = true)
-  @Getter(AccessLevel.NONE)
-  private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+  public static final String EXTERNAL_ID = "externalId";
+
+  public static final String CREATED_AT = "createdAt";
+  public static final String UPDATED_AT = "updatedAt";
+
+  /** Sorting criteria from {@link Domain} attributes to provide for its implementations. */
+  protected static final Comparator<Domain> DOMAIN_COMPARATOR =
+      Comparator.nullsLast(
+              Comparator.<Domain, Long>comparing(AbstractPersistable::getId)
+                  .thenComparing(Domain::getExternalId))
+          .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getUpdatedAt)))
+          .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getCreatedAt)));
 
   /** Surrogate key. Meant to be handled by the outside world. */
   @Schema(
@@ -63,8 +80,9 @@ public abstract class Domain {
       description = "Surrogate key. Meant to be handled by the outside world.",
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "ed3d3509-cd6e-4a21-a021-f6826440935a")
-  @JsonProperty(value = "id", access = Access.READ_ONLY)
-  @Column(name = "external_id", nullable = false, unique = true)
+  @JsonProperty(access = Access.READ_ONLY)
+  @Type(type = "uuid-char")
+  @Column(nullable = false, unique = true, updatable = false)
   private UUID externalId;
 
   /** Record's persist timestamp. Meant to not be updatable. */
@@ -72,9 +90,10 @@ public abstract class Domain {
       description = "Record's persist timestamp. Meant to not be updatable.",
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "1986-08-19T10:20:00.000Z")
-  @PastOrPresent
-  @Column(name = "created_at", nullable = false)
   @JsonProperty(access = Access.READ_ONLY)
+  @PastOrPresent
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
   /** Record's last update timestamp. Null as initial value. */
@@ -82,38 +101,23 @@ public abstract class Domain {
       description = "Record's last update timestamp. Null as initial value.",
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "1986-08-19T10:20:00.000Z")
-  @PastOrPresent
-  @Column(name = "updated_at", nullable = false)
   @JsonProperty(access = Access.READ_ONLY)
+  @PastOrPresent
+  @LastModifiedDate
+  @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
 
-  /** Sorting criteria from {@link Domain} attributes to provide for its implementations. */
-  protected static final Comparator<Domain> DOMAIN_COMPARATOR =
-      Comparator.nullsLast(Comparator.comparing(Domain::getExternalId))
-          .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getUpdatedAt)))
-          .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getCreatedAt)));
-
-  /**
-   * Generates values for {@link Domain#externalId} and {@link Domain#createdAt} on creation.
-   *
-   * @see PrePersist
-   */
-  @SuppressWarnings("unused")
-  @PrePersist
-  final void idAndCreatedAtOnPersist() {
-    externalId = UUID.randomUUID();
-    createdAt = OffsetDateTime.now();
-    updatedAt = null;
+  @Schema(hidden = true)
+  @JsonIgnore
+  @Override
+  public Long getId() {
+    return super.getId();
   }
 
-  /**
-   * Generates current timestamp for {@link Domain#updatedAt} on update.
-   *
-   * @see PreUpdate
-   */
+  /** Generates values for {@link #externalId} and {@link #createdAt}. */
   @SuppressWarnings("unused")
-  @PreUpdate
-  final void updatedAtOnUpdate() {
-    updatedAt = OffsetDateTime.now();
+  @PrePersist
+  final void prePersist() {
+    externalId = UUID.randomUUID();
   }
 }
