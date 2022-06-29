@@ -2,8 +2,8 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
+import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

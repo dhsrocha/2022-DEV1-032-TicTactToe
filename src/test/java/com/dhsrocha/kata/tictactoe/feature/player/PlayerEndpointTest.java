@@ -1,5 +1,23 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
+import static java.time.OffsetDateTime.now;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dhsrocha.kata.tictactoe.helper.ConfigurationHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -19,24 +37,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static java.time.OffsetDateTime.now;
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test Suite for features related to {@link Player} domain. It intends to load the least
@@ -191,14 +191,14 @@ final class PlayerEndpointTest {
         .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.totalElements", is(1)));
     mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(APPLICATION_JSON))
-      .andExpect(jsonPath("$.id").doesNotExist())
-      .andExpect(jsonPath("$.active", is(toUpdate.isActive())))
-      .andExpect(jsonPath("$.username", is(toUpdate.getUsername())))
-      .andExpect(jsonPath("$.externalId", is(notNullValue(UUID.class))))
-      .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
-      .andExpect(jsonPath("$.updatedAt", is(notNullValue(OffsetDateTime.class))));
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(APPLICATION_JSON))
+        .andExpect(jsonPath("$.id").doesNotExist())
+        .andExpect(jsonPath("$.active", is(toUpdate.isActive())))
+        .andExpect(jsonPath("$.username", is(toUpdate.getUsername())))
+        .andExpect(jsonPath("$.externalId", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+        .andExpect(jsonPath("$.updatedAt", is(notNullValue(OffsetDateTime.class))));
   }
 
   @Test
