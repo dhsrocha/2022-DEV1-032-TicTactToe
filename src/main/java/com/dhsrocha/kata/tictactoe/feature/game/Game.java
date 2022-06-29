@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
@@ -30,6 +31,8 @@ import lombok.Singular;
  */
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder(toBuilder = true)
 @Setter(AccessLevel.PACKAGE)
 @EqualsAndHashCode(callSuper = true)
@@ -48,7 +51,7 @@ public class Game extends Domain implements Comparable<Game> {
   /** Game's type. Holds its rules in it. */
   @Schema(description = "Game's type. Holds its rules in it.", example = "TIC_TAC_TOE")
   @Column(nullable = false)
-  private final @NonNull @NotNull Type type;
+  private @NonNull @NotNull Type type;
   /** Current {@link Game}'s life-cycle stage. Starts as {@link Stage#AWAITS}. */
   @Schema(description = "Current Game's life-cycle stage. Starts as Stage#AWAITS.")
   @Column(nullable = false)
@@ -56,7 +59,7 @@ public class Game extends Domain implements Comparable<Game> {
   /** Home player. Holds the {@link Game} and awaits for another one as {@link #away}. */
   @Schema(description = "Home player. Holds the Game and awaits for another one as away.")
   @ManyToOne
-  private final @NonNull @NotNull Player home;
+  private @NonNull @NotNull Player home;
   /** Away player. Joins the {@link Game} as the {@link #home}'s opponent. */
   @Schema(description = "Away player. Joins the Game as the home's opponent.")
   @ManyToOne
@@ -103,7 +106,7 @@ public class Game extends Domain implements Comparable<Game> {
   public final Game finish(@NonNull final Player lastRound, final boolean surrendered) {
     ExceptionCode.GAME_NOT_IN_PROGRESS.unless(null != away && Stage.IN_PROGRESS == stage);
     ExceptionCode.PLAYER_NOT_IN_GAME.unless(home.equals(lastRound) || away.equals(lastRound));
-    setWinner(!surrendered && home.equals(lastRound) ? home : away.equals(lastRound) ? away : home);
+    setWinner(surrendered ^ home.equals(lastRound) ? home : away.equals(lastRound) ? away : home);
     setStage(Stage.FINISHED);
     return this;
   }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
@@ -36,7 +37,7 @@ public abstract class PlayerService {
    * @param id External identification.
    * @return {@link Player} found.
    */
-  abstract @NonNull Optional<Player> find(@NonNull final UUID id);
+  public abstract @NonNull Optional<Player> find(@NonNull final UUID id);
 
   /**
    * Persists a {@link Player} resource.
@@ -122,6 +123,7 @@ public abstract class PlayerService {
    * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
    */
   @Data
+  @AllArgsConstructor(access = AccessLevel.PRIVATE)
   @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Search {
     private Boolean active;

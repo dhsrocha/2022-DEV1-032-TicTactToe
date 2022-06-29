@@ -15,10 +15,20 @@ import org.springframework.web.client.HttpClientErrorException;
 @AllArgsConstructor
 public enum ExceptionCode implements Supplier<RuntimeException> {
   // Player
+  /** {@link Player} could not be found. */
+  PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND),
+  /** {@link Player} is in a ongoing {@link Game}. */
+  PLAYER_IN_AN_ONGOING_GAME(HttpStatus.CONFLICT),
   /** {@link Player} is not in {@link Game}. */
   PLAYER_NOT_IN_GAME(HttpStatus.CONFLICT),
+  /** {@link Player} is already in {@link Game}. */
+  PLAYER_ALREADY_IN_GAME(HttpStatus.CONFLICT),
 
   // Game
+  /** {@link Game} could not be found. */
+  GAME_NOT_FOUND(HttpStatus.NOT_FOUND),
+  /** {@link Game} is not in an awaiting stage. */
+  GAME_NOT_IN_AWAITS(HttpStatus.CONFLICT),
   /** {@link Game} is not in an in-progress stage. */
   GAME_NOT_IN_PROGRESS(HttpStatus.CONFLICT),
   ;
