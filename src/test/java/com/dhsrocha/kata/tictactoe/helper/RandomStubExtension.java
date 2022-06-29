@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature;
+package com.dhsrocha.kata.tictactoe.helper;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.github.javafaker.Faker;

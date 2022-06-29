@@ -1,6 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
-import com.dhsrocha.kata.tictactoe.feature.RandomStubExtension;
+import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

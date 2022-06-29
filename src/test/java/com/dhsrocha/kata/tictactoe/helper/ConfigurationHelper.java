@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 
 @SuppressWarnings("unused")
 @org.springframework.boot.test.context.TestConfiguration
-public class TestConfiguration {
+public class ConfigurationHelper {
 
   @Bean
   DataSource getDataSource() {

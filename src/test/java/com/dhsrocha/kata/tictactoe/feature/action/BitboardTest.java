@@ -1,6 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.action;
 
-import com.dhsrocha.kata.tictactoe.feature.RandomStubExtension;
+import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

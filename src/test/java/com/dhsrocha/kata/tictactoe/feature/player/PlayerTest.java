@@ -3,7 +3,7 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.dhsrocha.kata.tictactoe.feature.RandomStubExtension;
+import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

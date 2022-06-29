@@ -1,6 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
-import com.dhsrocha.kata.tictactoe.helper.TestConfiguration;
+import com.dhsrocha.kata.tictactoe.helper.ConfigurationHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
       "logging.level.org.springframework.transaction.interceptor=TRACE"
     })
 @AutoConfigureMockMvc
-@Import(TestConfiguration.class)
+@Import(ConfigurationHelper.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 final class PlayerEndpointTest {
 
