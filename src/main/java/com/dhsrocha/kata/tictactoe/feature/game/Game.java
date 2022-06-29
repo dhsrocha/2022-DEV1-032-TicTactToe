@@ -2,6 +2,7 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.action.Action;
+import com.dhsrocha.kata.tictactoe.feature.action.Bitboard;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -112,13 +113,31 @@ public class Game extends Domain implements Comparable<Game> {
   }
 
   /**
+   * Process results of a {@link Bitboard}, according to provided {@link Type}.
+   *
+   * @param bitboard Bitboard holding a state.
+   * @return Processed result.
+   */
+  final Game resultFrom(@NonNull final Bitboard bitboard) {
+    ExceptionCode.GAME_NOT_IN_PROGRESS.unless(stage == Stage.IN_PROGRESS);
+    final var result = type.process(bitboard.getState());
+    if (null != away && result.hasWinner) {
+      finish(Game.Result.HOME == result ? home : away);
+    }
+    if (null != away && Result.NOT_OVER != result) {
+      setStage(Game.Stage.FINISHED);
+    }
+    return this;
+  }
+
+  /**
    * Represents a game's life-cycle.
    *
    * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
    */
   @Getter
   @AllArgsConstructor
-  enum Stage {
+  public enum Stage {
     /** The {@link Game} is finished. */
     FINISHED(null),
     /** The {@link Game} is in progress. */
@@ -137,13 +156,16 @@ public class Game extends Domain implements Comparable<Game> {
    */
   @AllArgsConstructor
   enum Result {
-    /** Home player has won the game. */
-    HOME,
-    /** Away player has won the game. */
-    AWAY,
-    /** The game is finished and there is no possibility to perform action on it. */
-    TIE,
-    /** The game is not over. There is possibility to bitboard evolve over. */
-    NOT_OVER,
+    /** {@link Game} is over with {@link #home} player as the winner. */
+    HOME(true),
+    /** {@link Game} is over with {@link #away} player as the winner. */
+    AWAY(true),
+    /** {@link Game} is finished and there is no possibility to perform another actions on it. */
+    TIE(false),
+    /** {@link Game} is not over. */
+    NOT_OVER(false),
+    ;
+    /** The result has a determined winner. */
+    private final boolean hasWinner;
   }
 }

@@ -5,6 +5,7 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.feature.action.Bitboard;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
@@ -30,6 +31,26 @@ import org.springframework.validation.annotation.Validated;
 public abstract class GameService {
 
   /**
+   * Process game result according to corresponding bitboard.
+   *
+   * @param game A game to process on:
+   *     <ul>
+   *       <li>Must be in {@link Game.Stage#IN_PROGRESS}.
+   *     </ul>
+   *
+   * @param bitboard Bitboard sent from some action.
+   */
+  public abstract void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
+
+  /**
+   * Retrieves a {@link Game} resource, based on its external id.
+   *
+   * @param id {@link Game}'s external identification.
+   * @return {@link Game} found.
+   */
+  public abstract @NonNull Optional<Game> find(@NonNull final UUID id);
+
+  /**
    * Retrieves a page of {@link Game} resources, based on search criteria.
    *
    * @param criteria Search criteria with corresponding {@link Game}'s attributes.
@@ -38,14 +59,6 @@ public abstract class GameService {
    */
   abstract @NonNull Page<Game> find(
       @NonNull final Search criteria, @NonNull final Pageable pageable);
-
-  /**
-   * Retrieves a {@link Game} resource, based on its external id.
-   *
-   * @param id {@link Game}'s external identification.
-   * @return {@link Game} found.
-   */
-  abstract @NonNull Optional<Game> find(@NonNull final UUID id);
 
   /**
    * Opens a {@link Game}, by creating it as a resource, and adds the requesting {@link Player} as
@@ -174,6 +187,11 @@ public abstract class GameService {
       PLAYER_NOT_IN_GAME.unless(game.getHome().equals(player) || game.getAway().equals(player));
 
       repository.save(game.finish(player, Boolean.TRUE));
+    }
+
+    @Override
+    public void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
+      repository.save(game.resultFrom(bitboard));
     }
   }
 

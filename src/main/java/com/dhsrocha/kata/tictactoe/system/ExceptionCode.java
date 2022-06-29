@@ -1,5 +1,6 @@
 package com.dhsrocha.kata.tictactoe.system;
 
+import com.dhsrocha.kata.tictactoe.feature.action.Action;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import java.util.function.Supplier;
@@ -31,6 +32,10 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   GAME_NOT_IN_AWAITS(HttpStatus.CONFLICT),
   /** {@link Game} is not in an in-progress stage. */
   GAME_NOT_IN_PROGRESS(HttpStatus.CONFLICT),
+
+  // Action
+  /** {@link Action} is not . */
+  ACTION_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
   ;
   /** Corresponding HTTP status. */
   private final HttpStatus code;

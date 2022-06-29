@@ -7,12 +7,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Comparator;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 /**
  * Represents an action which can be made in a {@link Game}.
@@ -21,8 +25,11 @@ import lombok.NonNull;
  */
 @Entity
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
+@Setter(AccessLevel.PACKAGE)
 public class Action extends Domain implements Comparable<Action> {
 
   /** Domain tag to use on endpoint paths and OpenAPI grouping. */
@@ -35,16 +42,16 @@ public class Action extends Domain implements Comparable<Action> {
 
   /** Game where this action is taken. */
   @Schema(description = "Game where this action is taken.")
-  @OneToOne(optional = false)
-  private final @NotNull @NonNull Game game;
+  @ManyToOne(optional = false)
+  private @NotNull @NonNull Game game;
   /** Person who did the action. */
   @Schema(description = "Person who did the action.")
-  @OneToOne(optional = false)
-  private final @NotNull @NonNull Player player;
+  @ManyToOne(optional = false)
+  private @NotNull @NonNull Player player;
   /** Represents the game board state in bitboard notation. */
   @Schema(description = "Represents the game board position in bitboard notation.")
   @Embedded
-  private final @NotNull @NonNull Bitboard state;
+  private @NotNull @NonNull Bitboard state;
 
   @Override
   public final int compareTo(@NonNull final Action toCompare) {
