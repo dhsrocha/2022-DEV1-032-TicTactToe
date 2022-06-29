@@ -43,6 +43,7 @@ public class Game extends Domain implements Comparable<Game> {
 
   /** Game's type. Holds its rules in it. */
   @Schema(description = "Game's type. Holds its rules in it.", example = "TIC_TAC_TOE")
+  @Column(nullable = false)
   private final Type type;
   /** Current {@link Game}'s life-cycle stage. Starts as {@link Stage#AWAITS}. */
   @Schema(description = "Current Game's life-cycle stage. Starts as Stage#AWAITS.")

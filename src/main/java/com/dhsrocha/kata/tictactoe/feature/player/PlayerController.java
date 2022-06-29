@@ -64,7 +64,7 @@ class PlayerController implements BaseController {
   }
 
   /**
-   * Persists a Player resource.
+   * Creates a Player resource.
    *
    * @param toCreate Resource to persist.
    * @return Resource's Location URI in proper header.
@@ -72,7 +72,7 @@ class PlayerController implements BaseController {
   @ApiResponse(responseCode = "422", description = "Constraint violation in request body.")
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  ResponseEntity<?> save(@RequestBody final Player toCreate) {
+  ResponseEntity<?> create(@RequestBody final Player toCreate) {
     final var created = service.save(toCreate);
     final var uri = ServletUriComponentsBuilder.fromCurrentRequest();
     final var location = uri.pathSegment(String.valueOf(created.getExternalId())).build().toUri();
