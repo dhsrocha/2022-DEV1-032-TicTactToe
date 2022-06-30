@@ -1,5 +1,15 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
@@ -19,16 +29,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test Suite for features related to {@link Game} domain. It intends to load the least requirements
@@ -131,7 +131,8 @@ final class GameEndpointTest {
     final var joiner = persist().getExternalId();
     create(opener);
     // Act - Assert
-    joinOrSurrender(UUID.randomUUID(), joiner, GameController.JOIN).andExpect(status().isNotFound());
+    joinOrSurrender(UUID.randomUUID(), joiner, GameController.JOIN)
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -231,7 +232,8 @@ final class GameEndpointTest {
     final var game = create(opener);
     joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act - Assert
-    joinOrSurrender(UUID.randomUUID(), joiner, GameController.SURRENDER).andExpect(status().isNotFound());
+    joinOrSurrender(UUID.randomUUID(), joiner, GameController.SURRENDER)
+        .andExpect(status().isNotFound());
   }
 
   @Test

@@ -1,5 +1,9 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.AWAITS;
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
+
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
@@ -17,10 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.AWAITS;
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Game} concerns.
@@ -137,7 +137,7 @@ public abstract class GameService {
       final var games = repository.findAll();
       final Predicate<Game> isOngoing = g -> g.getStage() == AWAITS || g.getStage() == IN_PROGRESS;
       final Predicate<Game> isIn =
-          g -> g.getHome().equals(player) || (null != g.getAway() && g.getAway().equals(player));
+          g -> g.getHome().equals(player) || null != g.getAway() && g.getAway().equals(player);
       ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(games.stream().noneMatch(isOngoing.and(isIn)));
 
       final var toCreate = Game.builder().type(type).stage(AWAITS).home(player);
@@ -156,7 +156,7 @@ public abstract class GameService {
       final var games = repository.findAll();
       final Predicate<Game> isOngoing = g -> g.getStage() == AWAITS || g.getStage() == IN_PROGRESS;
       final Predicate<Game> isIn =
-          g -> g.getHome().equals(player) || (null != g.getAway() && g.getAway().equals(player));
+          g -> g.getHome().equals(player) || null != g.getAway() && g.getAway().equals(player);
       ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(games.stream().noneMatch(isOngoing.and(isIn)));
 
       game.setAway(player);

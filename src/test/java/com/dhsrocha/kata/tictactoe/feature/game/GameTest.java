@@ -69,7 +69,8 @@ public final class GameTest implements RandomStubExtension {
         assertThrows(HttpClientErrorException.class, () -> stub.finish(PlayerTest.validStub()));
     // Assert
     assertEquals(
-        ex.getMessage(), HttpStatus.CONFLICT.value() + " " + ExceptionCode.PLAYER_NOT_IN_GAME.name());
+        ex.getMessage(),
+        HttpStatus.CONFLICT.value() + " " + ExceptionCode.PLAYER_NOT_IN_GAME.name());
   }
 
   @Test
@@ -87,7 +88,8 @@ public final class GameTest implements RandomStubExtension {
     final var ex = assertThrows(HttpClientErrorException.class, () -> stub.finish(stub.getHome()));
     // Assert
     assertEquals(
-        ex.getMessage(), HttpStatus.CONFLICT.value() + " " + ExceptionCode.GAME_NOT_IN_PROGRESS.name());
+        ex.getMessage(),
+        HttpStatus.CONFLICT.value() + " " + ExceptionCode.GAME_NOT_IN_PROGRESS.name());
   }
 
   public static Game validStub() {
