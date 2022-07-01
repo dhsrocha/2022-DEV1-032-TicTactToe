@@ -31,8 +31,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Test Suite for features related to {@link Game} domain. It intends to load the least requirements
- * to make the corresponding endpoints available and functional.
+ * Test suite for features related to {@link Game} domain.
+ *
+ * <p>It intends to load the least requirements to make the corresponding endpoints available and
+ * functional.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */

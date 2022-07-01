@@ -2,10 +2,8 @@ package com.dhsrocha.kata.tictactoe.system;
 
 import org.springdoc.api.ErrorMessage;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -19,19 +17,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 class ControllerAdvice extends ResponseEntityExceptionHandler {
 
-  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   @ExceptionHandler(javax.validation.ConstraintViolationException.class)
-  ErrorMessage javaxValidation(javax.validation.ConstraintViolationException ex) {
-    return new ErrorMessage(ex.getMessage());
+  ResponseEntity<ErrorMessage> javaxValidation(javax.validation.ConstraintViolationException ex) {
+    final var error = new ErrorMessage(ex.getMessage());
+    return ResponseEntity.status(422).body(error);
   }
 
-  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   @ExceptionHandler({
     DataIntegrityViolationException.class,
     org.hibernate.exception.ConstraintViolationException.class
   })
-  ErrorMessage persistenceConstraintViolation(RuntimeException ex) {
-    return new ErrorMessage(ex.getMessage());
+  ResponseEntity<ErrorMessage> persistenceConstraintViolation(RuntimeException ex) {
+    final var error = new ErrorMessage(ex.getMessage());
+    return ResponseEntity.status(422).body(error);
   }
 
   @ExceptionHandler(HttpClientErrorException.class)

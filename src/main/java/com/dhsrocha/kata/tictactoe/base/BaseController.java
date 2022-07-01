@@ -5,7 +5,4 @@ package com.dhsrocha.kata.tictactoe.base;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public interface BaseController {
-
-  String ID = "{id}";
-}
+public interface BaseController {}

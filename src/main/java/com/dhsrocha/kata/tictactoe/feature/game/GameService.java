@@ -1,5 +1,9 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.AWAITS;
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
+
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
@@ -18,10 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.AWAITS;
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Game} concerns.
@@ -130,9 +130,9 @@ public abstract class GameService {
                   cb.conjunction(),
                   cb.equal(r.get(Search.TYPE), criteria.type),
                   cb.equal(r.get(Search.STAGE), criteria.stage),
-                  cb.equal(r.get(Search.HOME), criteria.home),
-                  cb.equal(r.get(Search.AWAY), criteria.away),
-                  cb.equal(r.get(Search.WINNER), criteria.winner)),
+                  cb.equal(r.get(Search.HOME), criteria.homeId),
+                  cb.equal(r.get(Search.AWAY), criteria.awayId),
+                  cb.equal(r.get(Search.WINNER), criteria.winnerId)),
           pageable);
     }
 
@@ -213,8 +213,8 @@ public abstract class GameService {
     private static final String WINNER = "winner";
     private final Type type;
     private final Game.Stage stage;
-    private final UUID home;
-    private final UUID away;
-    private final UUID winner;
+    private final UUID homeId;
+    private final UUID awayId;
+    private final UUID winnerId;
   }
 }

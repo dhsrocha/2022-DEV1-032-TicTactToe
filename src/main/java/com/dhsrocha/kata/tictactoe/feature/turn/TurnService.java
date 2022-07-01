@@ -1,5 +1,9 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
+
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
@@ -19,10 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Turn} concerns.
@@ -90,8 +90,8 @@ public abstract class TurnService {
           (r, cq, cb) ->
               cb.or(
                   cb.conjunction(),
-                  cb.equal(r.get(Search.GAME), criteria.game),
-                  cb.equal(r.get(Search.PLAYER), criteria.player)),
+                  cb.equal(r.get(Search.GAME), criteria.gameId),
+                  cb.equal(r.get(Search.PLAYER), criteria.playerId)),
           pageable);
     }
 
@@ -102,7 +102,8 @@ public abstract class TurnService {
     }
 
     @Override
-    @NonNull UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final int bitboard) {
+    @NonNull
+    UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final int bitboard) {
       final var game = gameService.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
@@ -134,7 +135,7 @@ public abstract class TurnService {
 
     private static final String GAME = "game";
     private static final String PLAYER = "player";
-    private final UUID game;
-    private final UUID player;
+    private final UUID gameId;
+    private final UUID playerId;
   }
 }

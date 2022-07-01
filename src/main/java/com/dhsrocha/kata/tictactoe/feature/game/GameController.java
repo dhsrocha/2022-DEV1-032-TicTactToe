@@ -22,19 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * Handles Game resources.
+ * Holds a match between two Player entities.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @SuppressWarnings("unused")
-@Tag(name = Game.TAG, description = "Handles Game resources.")
+@Tag(name = Game.TAG, description = "Holds a match between two Player entities.")
 @RestController
 @RequestMapping(Game.TAG)
 @AllArgsConstructor
 class GameController implements BaseController {
 
-  static final String JOIN = ID + "/join";
-  static final String SURRENDER = ID + "/surrender";
+  static final String JOIN = '{' + Game.ID + '}' + "/join";
+  static final String SURRENDER = '{' + Game.ID + '}' + "/surrender";
 
   private final GameService service;
 
@@ -43,7 +43,7 @@ class GameController implements BaseController {
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
    * @param pg Pagination set of parameters.
-   * @return Pagination set of Game resources.
+   * @return Paginated set of resources, with additional information about it.
    */
   @GetMapping
   Page<Game> find(
@@ -55,26 +55,26 @@ class GameController implements BaseController {
   /**
    * Retrieves a Game resource, based on its external id.
    *
-   * @param id Game's external identification.
-   * @return Game found.
+   * @param gameId Resource's external identification.
+   * @return Resource found.
    */
   @ApiResponse(responseCode = "404", description = "Game not found.")
-  @GetMapping(ID)
-  Game find(@PathVariable final UUID id) {
-    return service.find(id).orElseThrow(ResourceNotFoundException::new);
+  @GetMapping('{' + Game.ID + '}')
+  Game find(@PathVariable(Game.ID) final UUID gameId) {
+    return service.find(gameId).orElseThrow(ResourceNotFoundException::new);
   }
 
   /**
-   * Opens a game, by creating it as a resource, and adds the requesting player as the home one.
+   * Opens a Game, by creating it as a resource and adds the requesting Player as the home one.
    *
-   * @param type Type of game to create.
+   * @param type Type of Game to create.
    * @param requesterId Requester's external identification:
    *     <ul>
    *       <li>Must belong to an existing player.
    *       <li>Must not be in an ongoing game.
    *     </ul>
    *
-   * @return Resource's Location URI in proper header.
+   * @return Resource's location URI in proper header.
    */
   @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
   @ApiResponse(responseCode = "409", description = "Requesting player is in a ongoing game.")
@@ -88,15 +88,15 @@ class GameController implements BaseController {
   }
 
   /**
-   * Joins a Player to an awaiting game and sets it to the next stage.
+   * Joins a Player to an awaiting Game and sets it to the next stage.
    *
-   * @param id Game's external identification:
+   * @param gameId Game's external identification:
    *     <ul>
    *       <li>Must exist.
    *       <li>Must be in the awaiting stage.
    *     </ul>
    *
-   * @param requesterId Requesting player's external identification:
+   * @param requesterId Requesting Player's external identification:
    *     <ul>
    *       <li>Must belong to an existing player.
    *       <li>Must not be in the sending game.
@@ -110,14 +110,14 @@ class GameController implements BaseController {
   @ApiResponse(responseCode = "409", description = "Requesting player is in an ongoing game.")
   @PutMapping(JOIN)
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void join(@PathVariable final UUID id, @RequestParam final UUID requesterId) {
-    service.join(id, requesterId);
+  void join(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
+    service.join(gameId, requesterId);
   }
 
   /**
    * Requesting Player gives up the sending Game and sets the opponent as winner.
    *
-   * @param id Game's external identification:
+   * @param gameId Game's external identification:
    *     <ul>
    *       <li>Must exist.
    *       <li>Must be in the progress stage.
@@ -135,7 +135,7 @@ class GameController implements BaseController {
   @ApiResponse(responseCode = "409", description = "Requesting player is not in the sending game.")
   @PutMapping(SURRENDER)
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void surrender(@PathVariable final UUID id, @RequestParam final UUID requesterId) {
-    service.surrender(id, requesterId);
+  void surrender(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
+    service.surrender(gameId, requesterId);
   }
 }

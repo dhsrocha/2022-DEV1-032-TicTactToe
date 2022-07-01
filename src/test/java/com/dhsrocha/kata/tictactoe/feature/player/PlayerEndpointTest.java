@@ -39,8 +39,10 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Test Suite for features related to {@link Player} domain. It intends to load the least
- * requirements to make the corresponding endpoints available and functional.
+ * Test suite for features related to {@link Player} domain.
+ *
+ * <p>It intends to load the least requirements to make the corresponding endpoints available and
+ * functional.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */

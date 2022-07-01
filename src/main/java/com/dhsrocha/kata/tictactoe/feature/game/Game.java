@@ -6,6 +6,7 @@ import com.dhsrocha.kata.tictactoe.feature.turn.Bitboard;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -24,12 +25,14 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * Holds a match between two {@link Player} entities.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
+@Schema(description = "Holds a match between two Player entities.")
 @Entity
 @Data
 @NoArgsConstructor
@@ -41,6 +44,8 @@ public class Game extends Domain implements Comparable<Game> {
 
   /** Domain tag to use on endpoint paths and OpenAPI grouping. */
   public static final String TAG = "games";
+  /** Id to use on {@link PathVariable}'s {@link URI}. */
+  public static final String ID = "gameId";
   /** Comparison criteria. */
   private static final Comparator<Game> COMPARATOR =
       Comparator.comparing(Game::getStage)

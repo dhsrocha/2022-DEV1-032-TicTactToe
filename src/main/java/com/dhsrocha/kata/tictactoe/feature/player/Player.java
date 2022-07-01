@@ -3,6 +3,7 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -24,12 +25,14 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
- * Represents a person who is playing a {@link Game}.
+ * Represents a person who plays a {@link Game}.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
+@Schema(description = "Represents a person who plays a Game.")
 @Entity
 @Table(
     uniqueConstraints = @UniqueConstraint(columnNames = "username"),
@@ -44,6 +47,8 @@ public class Player extends Domain implements Comparable<Player> {
 
   /** Domain tag to use on endpoint paths and OpenAPI grouping. */
   public static final String TAG = "players";
+  /** Id to use on {@link PathVariable}'s {@link URI}. */
+  public static final String ID = "playerId";
   /** Minimum string length. */
   private static final int MIN_LENGTH = 2;
   /** Maximum string length. */

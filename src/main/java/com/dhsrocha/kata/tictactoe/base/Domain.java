@@ -68,9 +68,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
 
   /** Sorting criteria from {@link Domain} attributes to provide for its implementations. */
   protected static final Comparator<Domain> DOMAIN_COMPARATOR =
-      Comparator.nullsLast(
-              Comparator.<Domain, Long>comparing(AbstractPersistable::getId)
-                  .thenComparing(Domain::getExternalId))
+      Comparator.comparing(Domain::isNew)
           .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getUpdatedAt)))
           .thenComparing(Comparator.nullsLast(Comparator.comparing(Domain::getCreatedAt)));
 
@@ -112,6 +110,13 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @Override
   public Long getId() {
     return super.getId();
+  }
+
+  @Schema(hidden = true)
+  @JsonIgnore
+  @Override
+  public boolean isNew() {
+    return super.isNew();
   }
 
   /** Generates values for {@link #externalId} and {@link #createdAt}. */

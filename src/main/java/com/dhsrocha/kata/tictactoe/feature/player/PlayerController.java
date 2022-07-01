@@ -1,6 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
+import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -20,16 +21,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * Handles Player resources.
+ * Represents a person who plays a Game."
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @SuppressWarnings("unused")
-@Tag(name = Player.TAG, description = "Handles Player resources.")
+@Tag(name = Player.TAG, description = "Represents a person who plays a Game.")
 @RestController
 @RequestMapping(Player.TAG)
 @AllArgsConstructor
@@ -42,7 +42,7 @@ class PlayerController implements BaseController {
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
    * @param pg Pagination set of parameters.
-   * @return Pagination set of Player resources.
+   * @return Paginated set of resources, with additional information about it.
    */
   @GetMapping
   Page<Player> find(
@@ -54,20 +54,20 @@ class PlayerController implements BaseController {
   /**
    * Retrieves a Player resource, based on its external id.
    *
-   * @param id External identification.
-   * @return Player found.
+   * @param playerId Resource's external identification.
+   * @return Resource found.
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
-  @GetMapping(ID)
-  Player find(@PathVariable final UUID id) {
-    return service.find(id).orElseThrow(ResourceNotFoundException::new);
+  @GetMapping('{' + Player.ID + '}')
+  Player find(@PathVariable(Player.ID) final UUID playerId) {
+    return service.find(playerId).orElseThrow(ResourceNotFoundException::new);
   }
 
   /**
    * Creates a Player resource.
    *
    * @param toCreate Resource to persist.
-   * @return Resource's Location URI in proper header.
+   * @return Resource's location URI in proper header.
    */
   @ApiResponse(responseCode = "422", description = "Constraint violation in request body.")
   @PostMapping
@@ -82,30 +82,26 @@ class PlayerController implements BaseController {
   /**
    * Updates a Player resource, if exists.
    *
-   * @param id External identification.
-   * @param toUpdate Player attributes to update at. o
+   * @param playerId Resource's external identification.
+   * @param toUpdate Attributes to update.
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
   @ApiResponse(responseCode = "422", description = "Constraint violation in request body.")
-  @PutMapping(ID)
+  @PutMapping('{' + Player.ID + '}')
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void update(@PathVariable final UUID id, @RequestBody final Player toUpdate) {
-    if (!service.update(id, toUpdate)) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    }
+  void update(@PathVariable(Player.ID) final UUID playerId, @RequestBody final Player toUpdate) {
+    ExceptionCode.PLAYER_NOT_FOUND.unless(service.update(playerId, toUpdate));
   }
 
   /**
-   * Removes a Player resource.
+   * Removes a Player resource, if exists.
    *
-   * @param id External identification.
+   * @param playerId Resource's external identification.
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
-  @DeleteMapping(ID)
+  @DeleteMapping('{' + Player.ID + '}')
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void remove(@PathVariable final UUID id) {
-    if (!service.remove(id)) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    }
+  void remove(@PathVariable(Player.ID) final UUID playerId) {
+    ExceptionCode.PLAYER_NOT_FOUND.unless(service.remove(playerId));
   }
 }

@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * Handles Action resources.
+ * Represents a event which depicts the state of a Game in time.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @SuppressWarnings("unused")
-@Tag(name = Turn.TAG, description = "Handles Action resources.")
+@Tag(name = Turn.TAG, description = "Represents a event which depicts the state of a Game in time.")
 @RestController
 @RequestMapping(Turn.TAG)
 @AllArgsConstructor
@@ -39,7 +39,7 @@ class TurnController implements BaseController {
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
    * @param pg Pagination set of parameters.
-   * @return Pagination set of Action resources.
+   * @return Paginated set of resources, with additional information about it.
    */
   @GetMapping
   Page<Turn> find(
@@ -51,13 +51,13 @@ class TurnController implements BaseController {
   /**
    * Retrieves a Action resource, based on its external id.
    *
-   * @param id Action's external identification.
-   * @return Action found.
+   * @param turnId Resource's external identification.
+   * @return Resource found.
    */
   @ApiResponse(responseCode = "404", description = "Action not found.")
-  @GetMapping(ID)
-  Turn find(@PathVariable final UUID id) {
-    return service.find(id).orElseThrow(ResourceNotFoundException::new);
+  @GetMapping('{' + Turn.ID + '}')
+  Turn find(@PathVariable(Turn.ID) final UUID turnId) {
+    return service.find(turnId).orElseThrow(ResourceNotFoundException::new);
   }
 
   /**
@@ -77,6 +77,7 @@ class TurnController implements BaseController {
    *     </ul>
    *
    * @param bitboard Representation of Game's state in bitboard notation.
+   * @return Resource's location URI in proper header.
    */
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @ApiResponse(responseCode = "409", description = "Game is not in in progress stage.")

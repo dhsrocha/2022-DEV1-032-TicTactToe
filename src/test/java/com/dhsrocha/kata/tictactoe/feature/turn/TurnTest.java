@@ -9,11 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test suite for {@link Turn}.
+ * Test suite for {@link Turn} class.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-@DisplayName("Test suite for Action class.")
+@DisplayName("Test suite for Turn class.")
 public final class TurnTest implements RandomStubExtension {
 
   @Test

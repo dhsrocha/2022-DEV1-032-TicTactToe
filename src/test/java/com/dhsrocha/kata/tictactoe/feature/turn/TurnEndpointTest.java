@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.dhsrocha.kata.tictactoe.base.BaseController;
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
@@ -33,23 +32,25 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Test Suite for features related to {@link Turn} domain. It intends to load the least requirements
- * to make the corresponding endpoints available and functional.
+ * Test suite for features related to {@link Turn} domain.
+ *
+ * <p>It intends to load the least requirements to make the corresponding endpoints available and
+ * functional.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Tag(Turn.TAG)
-@DisplayName("Suite to test features related to Action domain, under integration testing strategy.")
+@DisplayName("Suite to test features related to turn domain, under integration testing strategy.")
 @SpringBootTest(
     properties = { //
-      "logging.level.org.springframework.transaction.interceptor=TRACE"
+      "logging.level.org.springframework.transTurn.interceptor=TRACE"
     })
 @AutoConfigureMockMvc
 @Import(ConfigurationHelper.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 final class TurnEndpointTest {
 
-  private static final String URI_OPEN = "/" + Game.TAG + "/" + BaseController.ID;
+  private static final String URI_OPEN = "/" + Game.TAG + "/" + '{' + Game.ID + '}';
   private static final String BASE = "/" + Turn.TAG;
 
   @Autowired MockMvc mvc;
@@ -58,7 +59,7 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN no created resource "
-          + "WHEN retrieving Action resources "
+          + "WHEN retrieving turn resources "
           + "THEN return an empty list.")
   void givenNoCreated_whenRetrieving_returnEmptyList() throws Exception {
     // Act / Assert
@@ -74,15 +75,15 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an action "
-          + "THEN action is created.")
-  void givenInProgressGame_whenCreating_thenActionIsCreated() throws Exception {
+          + "WHEN creating an turn "
+          + "THEN turn is created.")
+  void givenInProgressGame_whenCreating_thenTurnIsCreated() throws Exception {
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
     final var game = idFrom(gameFor(opener));
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act
-    final var res = notOverActionFor(game, opener).andExpect(status().isCreated());
+    final var res = notOverTurnFor(game, opener).andExpect(status().isCreated());
     // Assert
     retrieve(res)
         .andExpect(jsonPath("$.game.externalId", is(game.toString())))
@@ -93,7 +94,7 @@ final class TurnEndpointTest {
   @DisplayName(
       "GIVEN in progress game " //
           + "AND away winning bitboard "
-          + "WHEN creating an action "
+          + "WHEN creating an turn "
           + "THEN return away as winner for game.")
   void givenInProgressGame_andHomeWinningBitboard_whenCreating_thenReturnHomeAsWinnerForGame()
       throws Exception {
@@ -104,15 +105,15 @@ final class TurnEndpointTest {
     final var game = idFrom(res);
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act
-    notOverActionFor(game, opener).andExpect(status().isCreated());
-    actionFor(game, joiner, 0b000101010111000000).andExpect(status().isCreated());
+    notOverTurnFor(game, opener).andExpect(status().isCreated());
+    turnFor(game, joiner, 0b000101010111000000).andExpect(status().isCreated());
     retrieve(res).andExpect(jsonPath("$.winner.externalId", is(joiner.toString())));
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an action with random game id "
+          + "WHEN creating an turn with random game id "
           + "THEN return exception with code GAME_NOT_FOUND.")
   void givenInProgressGame_whenCreatingRandomGameId_thenReturn409_GAME_NOT_FOUND()
       throws Exception {
@@ -123,13 +124,13 @@ final class TurnEndpointTest {
     final var game = idFrom(res);
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act - Assert
-    notOverActionFor(UUID.randomUUID(), opener).andExpect(status().isNotFound());
+    notOverTurnFor(UUID.randomUUID(), opener).andExpect(status().isNotFound());
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an action "
+          + "WHEN creating an turn "
           + "THEN return exception with code GAME_NOT_IN_PROGRESS.")
   void givenFinishedGame_whenCreating_thenReturn409_GAME_NOT_IN_PROGRESS() throws Exception {
     // Arrange
@@ -137,13 +138,13 @@ final class TurnEndpointTest {
     final var res = gameFor(opener);
     final var game = idFrom(res);
     // Act - Assert
-    notOverActionFor(game, opener).andExpect(status().isConflict());
+    notOverTurnFor(game, opener).andExpect(status().isConflict());
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an action "
+          + "WHEN creating an turn "
           + "THEN return exception with code PLAYER_NOT_FOUND.")
   void givenInProgressGame_and2Players_whenCreatingRandomPlayerId_thenReturn404_PLAYER_NOT_FOUND()
       throws Exception {
@@ -154,13 +155,13 @@ final class TurnEndpointTest {
     final var game = idFrom(res);
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act - Assert
-    notOverActionFor(game, UUID.randomUUID()).andExpect(status().isNotFound());
+    notOverTurnFor(game, UUID.randomUUID()).andExpect(status().isNotFound());
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an action "
+          + "WHEN creating an turn "
           + "THEN return exception with code PLAYER_NOT_IN_GAME.")
   void givenInProgressGame_and3Players_whenCreating_thenReturn409_PLAYER_NOT_IN_GAME()
       throws Exception {
@@ -172,16 +173,16 @@ final class TurnEndpointTest {
     final var game = idFrom(res);
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act - Assert
-    notOverActionFor(game, third).andExpect(status().isConflict());
+    notOverTurnFor(game, third).andExpect(status().isConflict());
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "AND previous action done by requester "
-          + "WHEN creating an action "
-          + "THEN return exception with code ACTION_LAST_SAME_PLAYER.")
-  void givenInProgressGame_andPreviousAction_whenCreating_thenReturn409_ACTION_LAST_SAME_PLAYER()
+          + "AND previous turn done by requester "
+          + "WHEN creating an turn "
+          + "THEN return exception with code Turn_LAST_SAME_PLAYER.")
+  void givenInProgressGame_andPreviousTurn_whenCreating_thenReturn409_Turn_LAST_SAME_PLAYER()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -189,8 +190,8 @@ final class TurnEndpointTest {
     final var game = idFrom(gameFor(opener));
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act
-    notOverActionFor(game, opener).andExpect(status().isCreated());
-    notOverActionFor(game, opener).andExpect(status().isConflict());
+    notOverTurnFor(game, opener).andExpect(status().isCreated());
+    notOverTurnFor(game, opener).andExpect(status().isConflict());
   }
 
   private Player player() {
@@ -203,12 +204,12 @@ final class TurnEndpointTest {
         req.queryParam("type", "TIC_TAC_TOE").queryParam("requesterId", player.toString()));
   }
 
-  private ResultActions notOverActionFor(@NonNull final UUID game, @NonNull final UUID player)
+  private ResultActions notOverTurnFor(@NonNull final UUID game, @NonNull final UUID player)
       throws Exception {
-    return actionFor(game, player, 0b0);
+    return turnFor(game, player, 0b0);
   }
 
-  private ResultActions actionFor(
+  private ResultActions turnFor(
       @NonNull final UUID game, @NonNull final UUID player, final int bitboard) throws Exception {
     final var req = post(BASE);
     return mvc.perform(
