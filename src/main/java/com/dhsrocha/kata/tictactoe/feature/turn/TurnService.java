@@ -1,9 +1,5 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
-
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
@@ -23,6 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Turn} concerns.
@@ -44,10 +44,14 @@ public abstract class TurnService {
   /**
    * Retrieves a {@link Turn} resource, based on its external id.
    *
-   * @param id {@link Turn}'s external identification.
+   * @param turnId {@link Turn}'s external identification:
+   *     <ul>
+   *       <li>Must belong to an existing turn.
+   *     </ul>
+   *
    * @return {@link Turn} found.
    */
-  abstract @NonNull Optional<Turn> find(@NonNull final UUID id);
+  abstract @NonNull Optional<Turn> find(@NonNull final UUID turnId);
 
   /**
    * Opens a Action, by creating it as a resource, and adds the requesting player as the home one.
@@ -60,7 +64,7 @@ public abstract class TurnService {
    *
    * @param requesterId Requesting {@link Player}'s external identification:
    *     <ul>
-   *       <li>Must belong to an existing {@link Player}.
+   *       <li>Must belong to an existing active {@link Player}.
    *       <li>Must be in the sending {@link Game}.
    *       <li>Must be different from the {@link Player one} who created last {@link Turn} for the
    *           sending {@link Game}.
@@ -96,8 +100,8 @@ public abstract class TurnService {
     }
 
     @Override
-    public @NonNull Optional<Turn> find(@NonNull final UUID id) {
-      return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id)).stream()
+    public @NonNull Optional<Turn> find(@NonNull final UUID turnId) {
+      return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), turnId)).stream()
           .findFirst();
     }
 

@@ -55,7 +55,11 @@ class GameController implements BaseController {
   /**
    * Retrieves a Game resource, based on its external id.
    *
-   * @param gameId Resource's external identification.
+   * @param gameId Resource's external identification: *
+   *     <ul>
+   *       <li>Must belong to an existing record.
+   *     </ul>
+   *
    * @return Resource found.
    */
   @ApiResponse(responseCode = "404", description = "Game not found.")
@@ -92,7 +96,7 @@ class GameController implements BaseController {
    *
    * @param gameId Game's external identification:
    *     <ul>
-   *       <li>Must exist.
+   *       <li>Must belong to an existing record.
    *       <li>Must be in the awaiting stage.
    *     </ul>
    *
@@ -119,13 +123,13 @@ class GameController implements BaseController {
    *
    * @param gameId Game's external identification:
    *     <ul>
-   *       <li>Must exist.
+   *       <li>Must belong to an existing game.
    *       <li>Must be in the progress stage.
    *     </ul>
    *
    * @param requesterId Requesting player's external identification:
    *     <ul>
-   *       <li>Must belong to an existing player.
+   *       <li>Must belong to an existing active player.
    *       <li>Must be in the sending game.
    *     </ul>
    */

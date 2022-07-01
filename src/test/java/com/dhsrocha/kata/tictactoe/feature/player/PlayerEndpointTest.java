@@ -8,6 +8,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.helper.ConfigurationHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -34,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -61,6 +63,7 @@ final class PlayerEndpointTest {
 
   @Autowired ObjectMapper mapper;
   @Autowired MockMvc mvc;
+  @Autowired BaseRepository<Player> repository;
 
   @Test
   @DisplayName(
@@ -99,9 +102,8 @@ final class PlayerEndpointTest {
     create(toCreateAndThenFail);
     final var body = mapper.writeValueAsString(toCreateAndThenFail);
     // Act
-    final var res =
-        mvc.perform(
-            post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+    final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
+    final var res = mvc.perform(req);
     // Assert
     res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
   }
@@ -116,9 +118,8 @@ final class PlayerEndpointTest {
     final var invalidStub = PlayerTest.validStub().toBuilder().username("2").build();
     final var json = mapper.writeValueAsString(invalidStub);
     // Act
-    final var res =
-        mvc.perform(
-            post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json));
+    final var req = post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json);
+    final var res = mvc.perform(req);
     // Assert
     res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
   }
@@ -181,7 +182,7 @@ final class PlayerEndpointTest {
     final var modified = PlayerTest.validStub();
     final var location = create(toCreate);
     final var toUpdate =
-        toCreate.toBuilder().active(modified.isActive()).username(modified.getUsername()).build();
+        toCreate.toBuilder().active(Boolean.TRUE).username(modified.getUsername()).build();
     final var body = mapper.writeValueAsString(toUpdate);
     // Act
     final var req =
@@ -209,25 +210,26 @@ final class PlayerEndpointTest {
           + "WHEN deleting the created resource "
           + "THEN return no content status "
           + "AND not found status after retrieve with id.")
-  void givenCreatedStub_whenDelete_thenReturnStatus204_andNotFoundAfterGetId() throws Exception {
+  void givenCreatedStub_whenDelete_thenReturnStatus204_andStatus404Afterwards() throws Exception {
     // Arrange
-    final var stub = create(PlayerTest.validStub());
+    final var stub = PlayerTest.validStub();
+    final var uri = create(stub);
     // Act
-    mvc.perform(delete(stub).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(delete(uri).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isNoContent());
     // Assert
-    mvc.perform(get(stub).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(get(uri).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isNotFound())
         .andExpect(content().string(""));
+    final var stream = repository.findAll().stream();
+    assertEquals(1, stream.filter(p -> p.getUsername().equals(stub.getUsername())).count());
   }
 
   private URI create(final Player toCreate) throws Exception {
     final var body = mapper.writeValueAsString(toCreate);
-    final var resp =
-        mvc.perform(post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists(HttpHeaders.LOCATION))
-            .andReturn();
-    return URI.create(Objects.requireNonNull(resp.getResponse().getHeader(HttpHeaders.LOCATION)));
+    final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
+    final var res =
+        mvc.perform(req).andExpect(status().isCreated()).andExpect(header().exists(LOCATION));
+    return URI.create(Objects.requireNonNull(res.andReturn().getResponse().getHeader(LOCATION)));
   }
 }

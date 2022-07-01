@@ -65,13 +65,13 @@ class TurnController implements BaseController {
    *
    * @param gameId Game's external identification:
    *     <ul>
-   *       <li>Must exist.
+   *       <li>Must belong to an existing game.
    *       <li>Must be in the in-progress stage.
    *     </ul>
    *
    * @param requesterId Requesting player's external identification:
    *     <ul>
-   *       <li>Must belong to an existing player.
+   *       <li>Must belong to an existing active player.
    *       <li>Must be in the sending game.
    *       <li>Must be different from the one who created last action for the sending game.
    *     </ul>

@@ -54,7 +54,11 @@ class PlayerController implements BaseController {
   /**
    * Retrieves a Player resource, based on its external id.
    *
-   * @param playerId Resource's external identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
+   *
    * @return Resource found.
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
@@ -82,7 +86,11 @@ class PlayerController implements BaseController {
   /**
    * Updates a Player resource, if exists.
    *
-   * @param playerId Resource's external identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
+   *
    * @param toUpdate Attributes to update.
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
@@ -96,7 +104,10 @@ class PlayerController implements BaseController {
   /**
    * Removes a Player resource, if exists.
    *
-   * @param playerId Resource's external identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
    */
   @ApiResponse(responseCode = "404", description = "Player not found.")
   @DeleteMapping('{' + Player.ID + '}')

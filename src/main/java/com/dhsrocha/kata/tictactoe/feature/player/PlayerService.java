@@ -34,10 +34,14 @@ public abstract class PlayerService {
   /**
    * Retrieves a {@link Player} resource, based on its external id.
    *
-   * @param id External identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
+   *
    * @return {@link Player} found.
    */
-  public abstract @NonNull Optional<Player> find(@NonNull final UUID id);
+  public abstract @NonNull Optional<Player> find(@NonNull final UUID playerId);
 
   /**
    * Persists a {@link Player} resource.
@@ -50,19 +54,27 @@ public abstract class PlayerService {
   /**
    * Updates a {@link Player} resource, if exists.
    *
-   * @param id External identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
+   *
    * @param toUpdate Player attributes to update at.
    * @return No content.
    */
-  abstract boolean update(@NonNull final UUID id, @NonNull final Player toUpdate);
+  abstract boolean update(@NonNull final UUID playerId, @NonNull final Player toUpdate);
 
   /**
    * Removes a {@link Player} resource.
    *
-   * @param id External identification.
+   * @param playerId Resource's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *     </ul>
+   *
    * @return No content.
    */
-  abstract boolean remove(@NonNull final UUID id);
+  abstract boolean remove(@NonNull final UUID playerId);
 
   /** {@inheritDoc} */
   @SuppressWarnings("unused")
@@ -87,7 +99,13 @@ public abstract class PlayerService {
 
     @Override
     public Optional<Player> find(@NonNull final UUID id) {
-      return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id)).stream()
+      return repository
+          .findAll(
+              (r, cq, cb) ->
+                  cb.and(
+                      cb.equal(r.get(Search.ACTIVE), Boolean.TRUE),
+                      cb.equal(r.get(Domain.EXTERNAL_ID), id)))
+          .stream()
           .findFirst();
     }
 
@@ -105,14 +123,18 @@ public abstract class PlayerService {
       return found -> {
         found.setActive(toUpdate.isActive());
         found.setUsername(toUpdate.getUsername());
-        return repository.saveAndFlush(found);
+        return repository.save(found);
       };
     }
 
     @Override
     public boolean remove(@NonNull final UUID id) {
       final var found = find(id);
-      found.ifPresent(repository::delete);
+      found.ifPresent(
+          p -> {
+            p.setActive(Boolean.FALSE);
+            repository.save(p);
+          });
       return found.isPresent();
     }
   }
