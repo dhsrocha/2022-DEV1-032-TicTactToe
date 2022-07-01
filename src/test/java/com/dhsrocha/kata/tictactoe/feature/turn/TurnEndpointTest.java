@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -33,12 +33,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Test Suite for features related to {@link Action} domain. It intends to load the least
- * requirements to make the corresponding endpoints available and functional.
+ * Test Suite for features related to {@link Turn} domain. It intends to load the least requirements
+ * to make the corresponding endpoints available and functional.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-@Tag(Action.TAG)
+@Tag(Turn.TAG)
 @DisplayName("Suite to test features related to Action domain, under integration testing strategy.")
 @SpringBootTest(
     properties = { //
@@ -47,10 +47,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @AutoConfigureMockMvc
 @Import(ConfigurationHelper.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-final class ActionEndpointTest {
+final class TurnEndpointTest {
 
   private static final String URI_OPEN = "/" + Game.TAG + "/" + BaseController.ID;
-  private static final String BASE = "/" + Action.TAG;
+  private static final String BASE = "/" + Turn.TAG;
 
   @Autowired MockMvc mvc;
   @Autowired BaseRepository<Player> playerRepository;

@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
@@ -30,15 +30,15 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 @Setter(AccessLevel.PACKAGE)
-public class Action extends Domain implements Comparable<Action> {
+public class Turn extends Domain implements Comparable<Turn> {
 
   /** Domain tag to use on endpoint paths and OpenAPI grouping. */
-  public static final String TAG = "actions";
+  public static final String TAG = "turn";
   /** Comparison criteria. */
-  private static final Comparator<Action> COMPARATOR =
-      Comparator.comparing(Action::getGame)
-          .thenComparing(Action::getPlayer)
-          .thenComparing(Action::getState);
+  private static final Comparator<Turn> COMPARATOR =
+      Comparator.comparing(Turn::getGame)
+          .thenComparing(Turn::getPlayer)
+          .thenComparing(Turn::getState);
 
   /** Game where this action is taken. */
   @Schema(description = "Game where this action is taken.")
@@ -54,7 +54,7 @@ public class Action extends Domain implements Comparable<Action> {
   private @NotNull @NonNull Bitboard state;
 
   @Override
-  public final int compareTo(@NonNull final Action toCompare) {
+  public final int compareTo(@NonNull final Turn toCompare) {
     return COMPARATOR.thenComparing(DOMAIN_COMPARATOR).compare(this, toCompare);
   }
 }

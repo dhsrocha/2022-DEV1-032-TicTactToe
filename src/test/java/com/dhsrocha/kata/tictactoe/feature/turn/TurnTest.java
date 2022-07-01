@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,12 +9,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test suite for {@link Action}.
+ * Test suite for {@link Turn}.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @DisplayName("Test suite for Action class.")
-public final class ActionTest implements RandomStubExtension {
+public final class TurnTest implements RandomStubExtension {
 
   @Test
   @DisplayName(
@@ -30,8 +30,8 @@ public final class ActionTest implements RandomStubExtension {
     assertTrue(violations.isEmpty());
   }
 
-  public static Action validStub() {
-    return Action.builder()
+  public static Turn validStub() {
+    return Turn.builder()
         .player(PlayerTest.validStub())
         .game(GameTest.validStub())
         .state(BitboardTest.validStub())

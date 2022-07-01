@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
@@ -25,29 +25,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Handles features related to {@link Action} concerns.
+ * Handles features related to {@link Turn} concerns.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class ActionService {
+public abstract class TurnService {
 
   /**
-   * Retrieves a page of {@link Action} resources, based on search criteria.
+   * Retrieves a page of {@link Turn} resources, based on search criteria.
    *
-   * @param criteria Search criteria with corresponding {@link Action}'s attributes.
+   * @param criteria Search criteria with corresponding {@link Turn}'s attributes.
    * @param pageable Pagination set of parameters.
-   * @return Pagination set of {@link Action} resources.
+   * @return Pagination set of {@link Turn} resources.
    */
-  abstract @NonNull Page<Action> find(
+  abstract @NonNull Page<Turn> find(
       @NonNull final Search criteria, @NonNull final Pageable pageable);
 
   /**
-   * Retrieves a {@link Action} resource, based on its external id.
+   * Retrieves a {@link Turn} resource, based on its external id.
    *
-   * @param id {@link Action}'s external identification.
-   * @return {@link Action} found.
+   * @param id {@link Turn}'s external identification.
+   * @return {@link Turn} found.
    */
-  abstract @NonNull Optional<Action> find(@NonNull final UUID id);
+  abstract @NonNull Optional<Turn> find(@NonNull final UUID id);
 
   /**
    * Opens a Action, by creating it as a resource, and adds the requesting player as the home one.
@@ -62,12 +62,12 @@ public abstract class ActionService {
    *     <ul>
    *       <li>Must belong to an existing {@link Player}.
    *       <li>Must be in the sending {@link Game}.
-   *       <li>Must be different from the {@link Player one} who created last {@link Action} for the
+   *       <li>Must be different from the {@link Player one} who created last {@link Turn} for the
    *           sending {@link Game}.
    *     </ul>
    *
    * @param bitboard Representation of {@link Game}'s state in {@link Bitboard} notation.
-   * @return {@link Action}'s external identification.
+   * @return {@link Turn}'s external identification.
    */
   abstract UUID create(
       @NonNull final UUID gameId, @NonNull final UUID requesterId, final int bitboard);
@@ -77,14 +77,14 @@ public abstract class ActionService {
   @Validated
   @Service
   @AllArgsConstructor
-  private static class Impl extends ActionService {
+  private static class Impl extends TurnService {
 
-    private final ActionRepository repository;
+    private final TurnRepository repository;
     private final GameService gameService;
     private final PlayerService playerService;
 
     @Override
-    public @NonNull Page<Action> find(
+    public @NonNull Page<Turn> find(
         @NonNull final Search criteria, @NonNull final Pageable pageable) {
       return repository.findAll(
           (r, cq, cb) ->
@@ -96,7 +96,7 @@ public abstract class ActionService {
     }
 
     @Override
-    public Optional<Action> find(@NonNull final UUID id) {
+    public Optional<Turn> find(@NonNull final UUID id) {
       return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id)).stream()
           .findFirst();
     }
@@ -114,7 +114,7 @@ public abstract class ActionService {
       ACTION_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer().equals(player)).isEmpty());
 
       final var state = Bitboard.of(bitboard);
-      final var toCreate = Action.builder().state(state).game(game).player(player).build();
+      final var toCreate = Turn.builder().state(state).game(game).player(player).build();
       final var created = repository.save(toCreate).getExternalId();
       gameService.calculate(game, state);
       return created;

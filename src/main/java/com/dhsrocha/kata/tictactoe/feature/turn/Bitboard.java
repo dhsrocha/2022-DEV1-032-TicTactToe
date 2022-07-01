@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +14,7 @@ import lombok.NonNull;
 import lombok.Setter;
 
 /**
- * Representation of board's state of a {@link Game} in the moment an {@link Action} is occurred.
+ * Representation of board's state of a {@link Game} in the moment an {@link Turn} is occurred.
  *
  * <p>It acts like the game's engine and will assemble all rules and their corresponding
  * calculation.

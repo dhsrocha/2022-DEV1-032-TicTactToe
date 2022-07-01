@@ -1,9 +1,9 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
-import com.dhsrocha.kata.tictactoe.feature.action.Action;
-import com.dhsrocha.kata.tictactoe.feature.action.Bitboard;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
+import com.dhsrocha.kata.tictactoe.feature.turn.Bitboard;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Comparator;
@@ -47,7 +47,7 @@ public class Game extends Domain implements Comparable<Game> {
           .thenComparing(Game::getWinner)
           .thenComparing(Game::getHome)
           .thenComparing(Game::getAway)
-          .thenComparing(g -> g.actions.size());
+          .thenComparing(g -> g.turns.size());
 
   /** Game's type. Holds its rules in it. */
   @Schema(description = "Game's type. Holds its rules in it.", example = "TIC_TAC_TOE")
@@ -72,7 +72,7 @@ public class Game extends Domain implements Comparable<Game> {
   /** Actions occurred in the current game. */
   @Schema(description = "Actions occurred in the current game.")
   @OneToMany(cascade = CascadeType.ALL)
-  private final @Singular @NotNull @NonNull Set<@NotNull Action> actions = Set.of();
+  private final @Singular @NotNull @NonNull Set<@NotNull Turn> turns = Set.of();
 
   @Override
   public final int compareTo(@NonNull final Game toCompare) {
@@ -82,7 +82,7 @@ public class Game extends Domain implements Comparable<Game> {
   /**
    * Finishes this {@link Game} and awards a {@link Player} as its winner.
    *
-   * @param lastRound The player who did the last {@link Action}:
+   * @param lastRound The player who did the last {@link Turn}:
    *     <ul>
    *       <li>Must be enrolled to the game as {@link #home} or {@link #away}.
    *     </ul>
@@ -96,7 +96,7 @@ public class Game extends Domain implements Comparable<Game> {
   /**
    * Finishes this {@link Game} and awards a {@link Player} as its winner.
    *
-   * @param lastRound The player who did the last {@link Action}:
+   * @param lastRound The player who did the last {@link Turn}:
    *     <ul>
    *       <li>Must be enrolled to the game as {@link #home} or {@link #away}.
    *     </ul>

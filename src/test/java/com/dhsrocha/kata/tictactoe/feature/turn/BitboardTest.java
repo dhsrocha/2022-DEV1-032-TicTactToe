@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import org.junit.jupiter.api.Assertions;

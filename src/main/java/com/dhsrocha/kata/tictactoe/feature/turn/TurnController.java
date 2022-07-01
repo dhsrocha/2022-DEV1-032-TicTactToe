@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.action;
+package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,13 +26,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @SuppressWarnings("unused")
-@Tag(name = Action.TAG, description = "Handles Action resources.")
+@Tag(name = Turn.TAG, description = "Handles Action resources.")
 @RestController
-@RequestMapping(Action.TAG)
+@RequestMapping(Turn.TAG)
 @AllArgsConstructor
-class ActionController implements BaseController {
+class TurnController implements BaseController {
 
-  private final ActionService service;
+  private final TurnService service;
 
   /**
    * Retrieves a page of Action resources, based on search criteria.
@@ -42,8 +42,8 @@ class ActionController implements BaseController {
    * @return Pagination set of Action resources.
    */
   @GetMapping
-  Page<Action> find(
-      @ParameterObject final ActionService.Search criteria, //
+  Page<Turn> find(
+      @ParameterObject final TurnService.Search criteria, //
       @ParameterObject final Pageable pg) {
     return service.find(criteria, pg);
   }
@@ -56,7 +56,7 @@ class ActionController implements BaseController {
    */
   @ApiResponse(responseCode = "404", description = "Action not found.")
   @GetMapping(ID)
-  Action find(@PathVariable final UUID id) {
+  Turn find(@PathVariable final UUID id) {
     return service.find(id).orElseThrow(ResourceNotFoundException::new);
   }
 

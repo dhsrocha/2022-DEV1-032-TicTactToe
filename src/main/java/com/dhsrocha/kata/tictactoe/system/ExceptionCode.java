@@ -1,8 +1,8 @@
 package com.dhsrocha.kata.tictactoe.system;
 
-import com.dhsrocha.kata.tictactoe.feature.action.Action;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +34,7 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   GAME_NOT_IN_PROGRESS(HttpStatus.CONFLICT),
 
   // Action
-  /** {@link Action} is not . */
+  /** {@link Turn} is not . */
   ACTION_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
   ;
   /** Corresponding HTTP status. */
