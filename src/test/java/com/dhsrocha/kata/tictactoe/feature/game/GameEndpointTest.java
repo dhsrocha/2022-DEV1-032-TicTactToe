@@ -4,7 +4,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.annotation.DirtiesContext;
 
 /**
@@ -58,7 +62,7 @@ final class GameEndpointTest extends BaseEndpointTest {
             + "THEN return an empty list.")
     void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
       // Act / Assert
-      mvc.perform(get(URI_GAME).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(withAdmin(get(URI_GAME)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.size", is(20)))
@@ -75,9 +79,10 @@ final class GameEndpointTest extends BaseEndpointTest {
             + "THEN return status 404.")
     void givenRandomId_whenRetrieve_thenReturnStatus404_GAME_NOT_FOUND() throws Exception {
       // Arrange
-      final var req = get(URI_GAME + '{' + Player.ID + '}', UUID.randomUUID());
+      final var req = get(URI_GAME + '{' + Game.ID + '}', UUID.randomUUID());
       // Act
-      final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+      final var res =
+          mvc.perform(withAdmin(req).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
       // Assert
       res.andExpect(status().isNotFound());
     }
@@ -96,11 +101,11 @@ final class GameEndpointTest extends BaseEndpointTest {
       // Act
       final var res = game(player().getExternalId()).andExpect(status().isCreated());
       // Assert
-      mvc.perform(get(URI_GAME).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(withAdmin(get(URI_GAME)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.totalElements", is(1)));
-      findOne(res)
+      fromLocation(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())))
@@ -150,7 +155,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var joiner = player();
       join(game, joiner.getExternalId()).andExpect(status().isNoContent());
       // Assert
-      findOne(res)
+      fromLocation(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.stage", is(Game.Stage.IN_PROGRESS.name())));
@@ -252,7 +257,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       // Act
       surrender(idFrom(res), joiner).andExpect(status().isNoContent());
       // Assert
-      findOne(res)
+      fromLocation(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.winner.id", is(opener.toString())));
@@ -278,7 +283,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       // Act
       surrender(game, joiner).andExpect(status().isNoContent());
       // Assert
-      mvc.perform(get(URI_TURN)).andExpect(jsonPath("$.page.totalElements", is(0)));
+      mvc.perform(withAdmin(get(URI_TURN))).andExpect(jsonPath("$.page.totalElements", is(0)));
     }
 
     @Test
@@ -369,7 +374,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var closed = close(idFrom(game), opener);
       // Assert
       closed.andExpect(status().isNoContent());
-      findOne(game)
+      fromLocation(game)
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(status().isNotFound());
     }
@@ -440,6 +445,29 @@ final class GameEndpointTest extends BaseEndpointTest {
       // Assert
       closed.andExpect(status().isConflict());
     }
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN anonymous user authentication in header "
+          + "WHEN perform game operations "
+          + "THEN return HTTP status 401.")
+  @WithAnonymousUser
+  void givenAnonUserInHeader_whenOperatesGame_thenReturnStatus401() throws Exception {
+    // Arrange
+    final var all = get(URI_GAME);
+    final var one = get(URI_GAME + '/' + '{' + Game.ID + '}', UUID.randomUUID());
+    final var open = post(URI_GAME);
+    final var close = delete(URI_GAME);
+    final var join = put(URI_GAME + '/' + '{' + Game.ID + '}', UUID.randomUUID());
+    final var surrender = put(URI_GAME + '/' + '{' + Game.ID + '}', UUID.randomUUID());
+    // Act - Assert
+    mvc.perform(all).andExpect(status().isUnauthorized());
+    mvc.perform(one).andExpect(status().isUnauthorized());
+    mvc.perform(open).andExpect(status().isUnauthorized());
+    mvc.perform(close).andExpect(status().isUnauthorized());
+    mvc.perform(join).andExpect(status().isUnauthorized());
+    mvc.perform(surrender).andExpect(status().isUnauthorized());
   }
 
   private Player player() {

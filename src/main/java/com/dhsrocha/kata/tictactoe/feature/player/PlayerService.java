@@ -2,7 +2,9 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 
 import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.feature.auth.Auth.Role;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
+import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +15,11 @@ import lombok.Data;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -61,9 +68,18 @@ public abstract class PlayerService implements BaseService<Search, Player> {
   @Validated
   @Service
   @AllArgsConstructor
-  private static class Impl extends PlayerService {
+  private static class Impl extends PlayerService implements UserDetailsService {
 
     private final PlayerRepository repository;
+    private final UserDetailsManager authService;
+
+    @Override
+    public UserDetails loadUserByUsername(@NonNull final String uuid)
+        throws UsernameNotFoundException {
+      return find(UUID.fromString(uuid))
+          .map(p -> authService.loadUserByUsername(p.getExternalId().toString()))
+          .orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
+    }
 
     @Override
     public @NonNull Page<Player> find(
@@ -91,7 +107,10 @@ public abstract class PlayerService implements BaseService<Search, Player> {
 
     @Override
     public @NonNull Player save(@NonNull final Player toCreate) {
-      return repository.save(toCreate.toBuilder().active(Boolean.TRUE).build());
+      final var p = repository.save(toCreate.toBuilder().active(Boolean.TRUE).build());
+      final var auth = User.withUsername(p.getExternalId().toString()).authorities(Role.PLAYER);
+      authService.createUser(auth.password(p.getExternalId().toString()).build());
+      return p;
     }
 
     @Override

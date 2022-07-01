@@ -65,6 +65,7 @@
     <version.pmd>6.46.0</version.pmd>
     <version.plugin.test>3.0.0-M7</version.plugin.test>
     <version.spring-doc>1.6.9</version.spring-doc>
+    <version.jwt>0.11.5</version.jwt>
 
     <skipTests>true</skipTests>
     <dhsrocha.author.email>dhsrocha.dev@gmail.com</dhsrocha.author.email>
@@ -266,11 +267,12 @@
       <groupId>com.github.javafaker</groupId>
       <artifactId>javafaker</artifactId>
     </dependency>
-    <!-- Spring -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
     </dependency>
+    <!-- Spring -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
@@ -287,10 +289,46 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Security -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!--
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-authorization-server</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>${version.jwt}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>${version.jwt}</version>
+      <scope>runtime</scope>
+    </dependency>
+    -->
     <!-- HATEOAS/OpenAPI -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-javadoc</artifactId>
+      <version>${version.spring-doc}</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
@@ -304,7 +342,7 @@
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-javadoc</artifactId>
+      <artifactId>springdoc-openapi-security</artifactId>
       <version>${version.spring-doc}</version>
     </dependency>
   </dependencies>

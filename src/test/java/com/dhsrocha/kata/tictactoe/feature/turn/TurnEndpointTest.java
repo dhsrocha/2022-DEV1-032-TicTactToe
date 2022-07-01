@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -59,7 +61,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
             + "THEN return an empty list.")
     void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
       // Act / Assert
-      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.size", is(20)))
@@ -78,7 +80,8 @@ final class TurnEndpointTest extends BaseEndpointTest {
       // Arrange
       final var req = get(BASE + '{' + Turn.ID + '}', UUID.randomUUID());
       // Act
-      final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+      final var res =
+          mvc.perform(withAdmin(req).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
       // Assert
       res.andExpect(status().isNotFound());
     }
@@ -97,11 +100,11 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var resOpener = notOverTurn(game, opener).andExpect(status().isCreated());
       final var resJoiner = notOverTurn(game, joiner).andExpect(status().isCreated());
       // Assert
-      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.totalElements", is(2)));
-      findOne(resOpener)
+      fromLocation(resOpener)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.game.id", is(game.toString())))
@@ -110,7 +113,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
           .andExpect(jsonPath("$.externalId").doesNotExist())
           .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
           .andExpect(jsonPath("$.updatedAt", is(nullValue())));
-      findOne(resJoiner)
+      fromLocation(resJoiner)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.game.id", is(game.toString())))
@@ -143,7 +146,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
       // Act
       notOverTurn(game, opener).andExpect(status().isCreated());
       turn(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isNoContent());
-      findOne(res)
+      fromLocation(res)
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.winner.id", is(joiner.toString())));
     }
@@ -258,7 +261,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
       // Act
       turn(game1, opener1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
       // Assert
-      findOne(toPreserve3)
+      fromLocation(toPreserve3)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON));
       final var hasItems =
@@ -266,10 +269,27 @@ final class TurnEndpointTest extends BaseEndpointTest {
               idFrom(toPreserve1).toString(),
               idFrom(toPreserve2).toString(),
               idFrom(toPreserve3).toString());
-      mvc.perform(get(BASE))
+      mvc.perform(withAdmin(get(BASE)))
           .andExpect(jsonPath("$.page.totalElements", is(3)))
           .andExpect(jsonPath("$.content..id", hasItems));
     }
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN anonymous user authentication in header "
+          + "WHEN perform turn operations "
+          + "THEN return HTTP status 401.")
+  @WithAnonymousUser
+  void givenAnonUserInHeader_whenOperatesTurn_thenReturnStatus401() throws Exception {
+    // Arrange
+    final var all = get(BASE);
+    final var one = get(BASE + '/' + '{' + Turn.ID + '}', UUID.randomUUID());
+    final var create = post(BASE);
+    // Act - Assert
+    mvc.perform(all).andExpect(status().isUnauthorized());
+    mvc.perform(one).andExpect(status().isUnauthorized());
+    mvc.perform(create).andExpect(status().isUnauthorized());
   }
 
   private Player player() {

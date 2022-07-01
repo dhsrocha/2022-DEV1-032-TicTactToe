@@ -20,6 +20,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
+import com.dhsrocha.kata.tictactoe.helper.BaseEndpointTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -38,8 +40,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Test suite for features related to {@link Player} domain.
@@ -57,12 +59,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-final class PlayerEndpointTest {
+final class PlayerEndpointTest extends BaseEndpointTest {
 
   private static final String BASE = "/" + Player.TAG;
 
   @Autowired ObjectMapper mapper;
-  @Autowired MockMvc mvc;
   @Autowired BaseRepository<Player> repository;
 
   @Test
@@ -79,7 +80,7 @@ final class PlayerEndpointTest {
     // Act
     final var location = create(stub);
     // Assert
-    mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(get(location)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.active", is(Boolean.TRUE)))
@@ -103,7 +104,7 @@ final class PlayerEndpointTest {
     final var body = mapper.writeValueAsString(toCreateAndThenFail);
     // Act
     final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
-    final var res = mvc.perform(req);
+    final var res = mvc.perform(withAdmin(req));
     // Assert
     res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
   }
@@ -119,7 +120,7 @@ final class PlayerEndpointTest {
     final var json = mapper.writeValueAsString(invalidStub);
     // Act
     final var req = post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json);
-    final var res = mvc.perform(req);
+    final var res = mvc.perform(withAdmin(req));
     // Assert
     res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
   }
@@ -131,7 +132,7 @@ final class PlayerEndpointTest {
           + "THEN return an empty list.")
   void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
     // Act / Assert
-    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.page.number", is(0)))
@@ -155,7 +156,8 @@ final class PlayerEndpointTest {
     final Function<URI, String> fun = p -> p.getPath().substring(p.getPath().lastIndexOf('/') + 1);
     final var ids = created.stream().map(fun).toArray(String[]::new);
     // Act
-    final var res = mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+    final var res =
+        mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
     // Assert
     final var usernames = set.stream().map(Player::getUsername).toArray();
     res.andExpect(status().isOk())
@@ -179,7 +181,8 @@ final class PlayerEndpointTest {
     // Arrange
     final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
     // Act
-    final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+    final var res =
+        mvc.perform(withAdmin(req).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
     // Assert
     res.andExpect(status().isNotFound());
   }
@@ -201,13 +204,13 @@ final class PlayerEndpointTest {
     // Act
     final var req =
         put(location).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
-    mvc.perform(req).andExpect(status().isNoContent());
+    mvc.perform(withAdmin(req)).andExpect(status().isNoContent());
     // Assert
-    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.page.totalElements", is(1)));
-    mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(get(location)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
@@ -234,20 +237,42 @@ final class PlayerEndpointTest {
     final var stub = PlayerTest.validStub();
     final var uri = create(stub);
     // Act
-    mvc.perform(delete(uri).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(delete(uri)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isNoContent());
     // Assert
-    mvc.perform(get(uri).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+    mvc.perform(withAdmin(get(uri)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isNotFound());
     final var stream = repository.findAll().stream();
     assertEquals(1, stream.filter(p -> p.getUsername().equals(stub.getUsername())).count());
   }
 
+  @Test
+  @DisplayName(
+      "GIVEN anonymous user authentication in header "
+          + "WHEN perform player operations "
+          + "THEN return HTTP status 401.")
+  @WithAnonymousUser
+  void givenAnonUserInHeader_whenOperatesPlayer_thenReturnStatus401() throws Exception {
+    // Arrange
+    final var all = get(BASE);
+    final var one = get(BASE + '/' + '{' + Turn.ID + '}', UUID.randomUUID());
+    final var create = post(BASE);
+    final var update = put(BASE + '/' + '{' + Turn.ID + '}', UUID.randomUUID());
+    final var remove = delete(BASE + '/' + '{' + Turn.ID + '}', UUID.randomUUID());
+    // Act - Assert
+    mvc.perform(all).andExpect(status().isUnauthorized());
+    mvc.perform(one).andExpect(status().isUnauthorized());
+    mvc.perform(create).andExpect(status().isUnauthorized());
+    mvc.perform(update).andExpect(status().isUnauthorized());
+    mvc.perform(remove).andExpect(status().isUnauthorized());
+  }
+
   private URI create(@NonNull final Player toCreate) throws Exception {
     final var body = mapper.writeValueAsString(toCreate);
-    final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
+    final var auth =
+        withAdmin(post(BASE)).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
     final var res =
-        mvc.perform(req).andExpect(status().isCreated()).andExpect(header().exists(LOCATION));
+        mvc.perform(auth).andExpect(status().isCreated()).andExpect(header().exists(LOCATION));
     return URI.create(Objects.requireNonNull(res.andReturn().getResponse().getHeader(LOCATION)));
   }
 

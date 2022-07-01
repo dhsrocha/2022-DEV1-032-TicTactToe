@@ -21,6 +21,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableJpaAuditing(dateTimeProviderRef = "providerRef", modifyOnCreate = false)
 class Configuration implements RepositoryRestConfigurer, WebMvcConfigurer {
 
+  static final String DEV = "dev";
+  static final String PROD = "prod";
+
   @Override
   public void configureRepositoryRestConfiguration(
       final RepositoryRestConfiguration cfg, final CorsRegistry reg) {
