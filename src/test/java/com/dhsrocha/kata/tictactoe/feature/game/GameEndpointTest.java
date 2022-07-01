@@ -78,7 +78,7 @@ final class GameEndpointTest {
           + "AND stage is awaits.")
   void givenCreatedPlayer_whenOpening_thenReturnGameIsCreated_andStageIsAwaits() throws Exception {
     // Act
-    final var res = create(persist().getExternalId()).andExpect(status().isCreated());
+    final var res = openFor(player().getExternalId()).andExpect(status().isCreated());
     // Assert
     retrieve(res).andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())));
   }
@@ -89,7 +89,7 @@ final class GameEndpointTest {
           + "THEN return exception with code PLAYER_NOT_FOUND.")
   void whenOpening_thenReturn404_PLAYER_NOT_FOUND() throws Exception {
     // Act - Assert
-    create(UUID.randomUUID()).andExpect(status().isNotFound());
+    openFor(UUID.randomUUID()).andExpect(status().isNotFound());
   }
 
   @Test
@@ -99,10 +99,10 @@ final class GameEndpointTest {
           + "THEN return exception with code PLAYER_ALREADY_IN_GAME.")
   void givenOpenedGame_whenOpeningAgain_thenReturn409_PLAYER_ALREADY_IN_GAME() throws Exception {
     // Arrange
-    final var created = persist().getExternalId();
-    create(created).andExpect(status().isCreated());
+    final var created = player().getExternalId();
+    openFor(created).andExpect(status().isCreated());
     // Act - Assert
-    create(created).andExpect(status().isConflict());
+    openFor(created).andExpect(status().isConflict());
   }
 
   @Test
@@ -112,11 +112,11 @@ final class GameEndpointTest {
           + "THEN game is in progress.")
   void given2Players_whenJoining_requesterIsJoinedToGame() throws Exception {
     // Arrange
-    final var opener = persist();
-    final var res = create(opener.getExternalId()).andExpect(status().isCreated());
+    final var opener = player();
+    final var res = openFor(opener.getExternalId()).andExpect(status().isCreated());
     final var game = idFrom(res);
     // Act
-    final var joiner = persist();
+    final var joiner = player();
     joinOrSurrender(game, joiner.getExternalId(), GameController.JOIN)
         .andExpect(status().isNoContent());
     // Assert
@@ -129,9 +129,9 @@ final class GameEndpointTest {
           + "THEN return exception with code GAME_NOT_FOUND.")
   void whenJoiningRandomGameId_thenReturnStatus409_GAME_NOT_FOUND() throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    openFor(opener);
     // Act - Assert
     joinOrSurrender(UUID.randomUUID(), joiner, GameController.JOIN)
         .andExpect(status().isNotFound());
@@ -144,11 +144,11 @@ final class GameEndpointTest {
           + "THEN return exception with code GAME_NOT_IN_AWAITS.")
   void givenOpenedGame_whenJoining_thenReturn409_GAME_NOT_IN_AWAITS() throws Exception {
     // Arrange
-    final var game = idFrom(create(persist().getExternalId()).andExpect(status().isCreated()));
-    joinOrSurrender(game, persist().getExternalId(), GameController.JOIN)
+    final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
+    joinOrSurrender(game, player().getExternalId(), GameController.JOIN)
         .andExpect(status().isNoContent());
     // Act - Assert
-    joinOrSurrender(game, persist().getExternalId(), GameController.JOIN)
+    joinOrSurrender(game, player().getExternalId(), GameController.JOIN)
         .andExpect(status().isConflict());
   }
 
@@ -160,7 +160,7 @@ final class GameEndpointTest {
   void givenOpenedGame_whenJoiningRandomPlayerId_thenReturnStatus409_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
-    final var game = idFrom(create(persist().getExternalId()).andExpect(status().isCreated()));
+    final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
     // Act - Assert
     joinOrSurrender(game, UUID.randomUUID(), GameController.JOIN).andExpect(status().isNotFound());
   }
@@ -173,9 +173,9 @@ final class GameEndpointTest {
   void givenJoinedGame_whenJoiningAlreadyJoined_thenReturnStatus409_PLAYER_ALREADY_IN_GAME()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var res = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var res = openFor(opener);
     final var game = idFrom(res.andExpect(status().isCreated()));
     joinOrSurrender(game, joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act - Assert
@@ -191,13 +191,13 @@ final class GameEndpointTest {
   void given2OpenedGames_whenJoiningToOther_thenReturnStatus409_PLAYER_IN_AN_ONGOING_GAME()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var res1 = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var res1 = openFor(opener);
     joinOrSurrender(idFrom(res1), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act - Assert
-    final var opener3 = persist().getExternalId();
-    final var res2 = create(opener3);
+    final var opener3 = player().getExternalId();
+    final var res2 = openFor(opener3);
     joinOrSurrender(idFrom(res2), joiner, GameController.JOIN).andExpect(status().isConflict());
   }
 
@@ -210,9 +210,9 @@ final class GameEndpointTest {
   void givenInProgressGame_whenSurrendering_thenReturnFinishedGame_andWinnerIsOpponent()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var res = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var res = openFor(opener);
     joinOrSurrender(idFrom(res), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act
     joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
@@ -229,9 +229,9 @@ final class GameEndpointTest {
   void givenInProgressGame_whenSurrendering_withRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var game = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var game = openFor(opener);
     joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act - Assert
     joinOrSurrender(UUID.randomUUID(), joiner, GameController.SURRENDER)
@@ -246,8 +246,8 @@ final class GameEndpointTest {
   void givenFinishedGame_whenSurrendering_thenReturnStatus409_GAME_NOT_IN_PROGRESS()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var game = create(opener);
+    final var opener = player().getExternalId();
+    final var game = openFor(opener);
     // Act
     final var surrendered = joinOrSurrender(idFrom(game), opener, GameController.SURRENDER);
     // Assert
@@ -262,9 +262,9 @@ final class GameEndpointTest {
   void givenInProgressGame_whenSurrenderingWithRandomPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var game = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var game = openFor(opener);
     joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act
     final var surrendered =
@@ -282,10 +282,10 @@ final class GameEndpointTest {
   void givenInProgressGame_and3Players_whenSurrendering_thenReturnStatus409_PLAYER_NOT_IN_GAME()
       throws Exception {
     // Arrange
-    final var opener = persist().getExternalId();
-    final var joiner = persist().getExternalId();
-    final var third = persist().getExternalId();
-    final var game = create(opener);
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var third = player().getExternalId();
+    final var game = openFor(opener);
     joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act
     final var surrendered = joinOrSurrender(idFrom(game), third, GameController.SURRENDER);
@@ -293,11 +293,11 @@ final class GameEndpointTest {
     surrendered.andExpect(status().isConflict());
   }
 
-  private Player persist() {
+  private Player player() {
     return playerRepository.save(PlayerTest.validStub().toBuilder().active(Boolean.TRUE).build());
   }
 
-  private ResultActions create(@NonNull final UUID player) throws Exception {
+  private ResultActions openFor(@NonNull final UUID player) throws Exception {
     final var type = Type.TIC_TAC_TOE.name();
     final var req = post(BASE);
     return mvc.perform(req.queryParam("type", type).queryParam("requesterId", player.toString()));
