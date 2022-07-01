@@ -34,8 +34,8 @@ import lombok.Singular;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
 @Setter(AccessLevel.PACKAGE)
+@Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class Game extends Domain implements Comparable<Game> {
 

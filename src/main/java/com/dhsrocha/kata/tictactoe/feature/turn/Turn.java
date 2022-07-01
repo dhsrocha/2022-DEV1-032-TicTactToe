@@ -27,9 +27,9 @@ import lombok.Setter;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter(AccessLevel.PACKAGE)
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-@Setter(AccessLevel.PACKAGE)
 public class Turn extends Domain implements Comparable<Turn> {
 
   /** Domain tag to use on endpoint paths and OpenAPI grouping. */

@@ -15,12 +15,14 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.Singular;
 
 /**
@@ -35,6 +37,7 @@ import lombok.Singular;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter(AccessLevel.PACKAGE)
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class Player extends Domain implements Comparable<Player> {
