@@ -1,9 +1,5 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
-
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
@@ -23,6 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Turn} concerns.
@@ -69,7 +69,7 @@ public abstract class TurnService {
    * @param bitboard Representation of {@link Game}'s state in {@link Bitboard} notation.
    * @return {@link Turn}'s external identification.
    */
-  abstract UUID create(
+  abstract @NonNull UUID create(
       @NonNull final UUID gameId, @NonNull final UUID requesterId, final int bitboard);
 
   /** {@inheritDoc} */
@@ -90,28 +90,28 @@ public abstract class TurnService {
           (r, cq, cb) ->
               cb.or(
                   cb.conjunction(),
-                  cb.equal(r.get("game"), criteria.game),
-                  cb.equal(r.get("player"), criteria.player)),
+                  cb.equal(r.get(Search.GAME), criteria.game),
+                  cb.equal(r.get(Search.PLAYER), criteria.player)),
           pageable);
     }
 
     @Override
-    public Optional<Turn> find(@NonNull final UUID id) {
+    public @NonNull Optional<Turn> find(@NonNull final UUID id) {
       return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id)).stream()
           .findFirst();
     }
 
     @Override
-    UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final int bitboard) {
+    @NonNull UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final int bitboard) {
       final var game = gameService.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
       final var player = playerService.find(requester).orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
-      PLAYER_NOT_IN_GAME.unless(game.getHome().equals(player) || game.getAway().equals(player));
+      PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
 
-      final var fromGame = repository.findAll().stream().filter(a -> a.getGame().equals(game));
+      final var fromGame = repository.findAll().stream().filter(a -> a.getGame() == game);
       final var last = fromGame.max(Comparator.comparing(Domain::getCreatedAt));
-      ACTION_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer().equals(player)).isEmpty());
+      ACTION_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
 
       final var state = Bitboard.of(bitboard);
       final var toCreate = Turn.builder().state(state).game(game).player(player).build();
@@ -131,6 +131,9 @@ public abstract class TurnService {
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
   @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Search {
+
+    private static final String GAME = "game";
+    private static final String PLAYER = "player";
     private final UUID game;
     private final UUID player;
   }

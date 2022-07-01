@@ -80,8 +80,8 @@ public abstract class PlayerService {
           (r, cq, cb) ->
               cb.or(
                   cb.conjunction(),
-                  cb.equal(r.get("active"), criteria.active),
-                  cb.like(r.get("username"), criteria.username + '%')),
+                  cb.equal(r.get(Search.ACTIVE), criteria.active),
+                  cb.like(r.get(Search.USERNAME), criteria.username + '%')),
           pageable);
     }
 
@@ -92,7 +92,7 @@ public abstract class PlayerService {
     }
 
     @Override
-    public Player save(@NonNull final Player toCreate) {
+    public @NonNull Player save(@NonNull final Player toCreate) {
       return repository.save(toCreate.toBuilder().active(Boolean.TRUE).build());
     }
 
@@ -101,7 +101,7 @@ public abstract class PlayerService {
       return find(id).map(update(toUpdate)).isPresent();
     }
 
-    private UnaryOperator<Player> update(final @NonNull Player toUpdate) {
+    private @NonNull UnaryOperator<Player> update(@NonNull final Player toUpdate) {
       return found -> {
         found.setActive(toUpdate.isActive());
         found.setUsername(toUpdate.getUsername());
@@ -126,6 +126,8 @@ public abstract class PlayerService {
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
   @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Search {
+    private static final String USERNAME = "username";
+    private static final String ACTIVE = "active";
     private Boolean active;
     private String username;
   }
