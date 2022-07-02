@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,7 +56,7 @@ class GameController implements BaseController {
   /**
    * Retrieves a Game resource, based on its external id.
    *
-   * @param gameId Resource's external identification: *
+   * @param gameId Resource's external identification:
    *     <ul>
    *       <li>Must belong to an existing record.
    *     </ul>
@@ -141,5 +142,30 @@ class GameController implements BaseController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void surrender(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
     service.surrender(gameId, requesterId);
+  }
+
+  /**
+   * Closes an awaiting Game.
+   *
+   * @param gameId Game's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing game.
+   *       <li>Must be in the awaiting stage.
+   *     </ul>
+   *
+   * @param requesterId Requesting player's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active Player.
+   *       <li>Must be in the sending Game.
+   *     </ul>
+   */
+  @ApiResponse(responseCode = "404", description = "Game not found.")
+  @ApiResponse(responseCode = "409", description = "Game is not in in awaiting stage.")
+  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
+  @ApiResponse(responseCode = "409", description = "Requesting player is not in the sending game.")
+  @DeleteMapping('{' + Game.ID + '}')
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  void close(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
+    service.close(gameId, requesterId);
   }
 }

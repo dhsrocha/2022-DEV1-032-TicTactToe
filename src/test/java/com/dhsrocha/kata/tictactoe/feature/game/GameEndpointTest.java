@@ -3,6 +3,7 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -293,6 +294,90 @@ final class GameEndpointTest {
     surrendered.andExpect(status().isConflict());
   }
 
+  @Test
+  @DisplayName(
+      "GIVEN game in awaiting stage "
+          + "WHEN closing a game "
+          + "THEN return status HTTP 204 "
+          + "AND this is no longer found.")
+  void givenAwaitingGame_whenClosing_thenReturnStatus204_andGameIsNotFound() throws Exception {
+    // Arrange
+    final var opener = player().getExternalId();
+    final var game = openFor(opener);
+    // Act
+    final var closed = close(idFrom(game), opener);
+    // Assert
+    closed.andExpect(status().isNoContent());
+    retrieve(game).andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN game in progress stage "
+          + "WHEN closing a game with random game id "
+          + "THEN return status HTTP 404 with code GAME_NOT_FOUND.")
+  void givenInProgressGame_whenClosingWithRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
+      throws Exception {
+    // Arrange
+    final var opener = player().getExternalId();
+    openFor(opener);
+    // Act
+    final var closed = close(UUID.randomUUID(), opener);
+    // Assert
+    closed.andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN game in progress stage "
+          + "WHEN closing a game "
+          + "THEN return status HTTP 409 with code GAME_NOT_IN_AWAITS.")
+  void givenInProgressGame_whenClosing_thenReturnStatus409_GAME_NOT_IN_AWAITS() throws Exception {
+    // Arrange
+    final var opener = player().getExternalId();
+    final var joiner = player().getExternalId();
+    final var game = openFor(opener);
+    joinOrSurrender(idFrom(game), joiner, GameController.JOIN);
+    // Act
+    final var closed = close(idFrom(game), opener);
+    // Assert
+    closed.andExpect(status().isConflict());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN game in awaiting stage "
+          + "WHEN closing a game with another player "
+          + "THEN return status HTTP 404 with code PLAYER_NOT_FOUND.")
+  void givenOpeningGame_whenClosingWithAnotherPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
+      throws Exception {
+    // Arrange
+    final var opener = player().getExternalId();
+    final var game = openFor(opener);
+    // Act
+    final var closed = close(idFrom(game), UUID.randomUUID());
+    // Assert
+    closed.andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN game in awaiting stage "
+          + "AND some other active player "
+          + "WHEN closing a game "
+          + "THEN return status HTTP 404 with code PLAYER_NOT_IN_GAME.")
+  void givenAwaitingGame_andAnotherPlayer_whenClosing_thenReturnStatus409_PLAYER_NOT_IN_GAME()
+      throws Exception {
+    // Arrange
+    final var opener = player().getExternalId();
+    final var another = player().getExternalId();
+    final var game = openFor(opener);
+    // Act
+    final var closed = close(idFrom(game), another);
+    // Assert
+    closed.andExpect(status().isConflict());
+  }
+
   private Player player() {
     return playerRepository.save(PlayerTest.validStub().toBuilder().active(Boolean.TRUE).build());
   }
@@ -301,6 +386,12 @@ final class GameEndpointTest {
     final var type = Type.TIC_TAC_TOE.name();
     final var req = post(BASE);
     return mvc.perform(req.queryParam("type", type).queryParam("requesterId", player.toString()));
+  }
+
+  private ResultActions close(@NonNull final UUID game, @NonNull final UUID player)
+      throws Exception {
+    final var req = delete(BASE + '/' + '{' + Game.ID + '}', game);
+    return mvc.perform(req.queryParam("requesterId", player.toString()));
   }
 
   private ResultActions joinOrSurrender(
@@ -314,7 +405,7 @@ final class GameEndpointTest {
 
   private ResultActions retrieve(@NonNull final ResultActions res) throws Exception {
     final var location = res.andReturn().getResponse().getHeader(HttpHeaders.LOCATION);
-    return mvc.perform(get(Objects.requireNonNull(location))).andExpect(status().isOk());
+    return mvc.perform(get(Objects.requireNonNull(location)));
   }
 
   private UUID idFrom(@NonNull final ResultActions res) {

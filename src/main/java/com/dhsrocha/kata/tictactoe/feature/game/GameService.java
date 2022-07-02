@@ -95,6 +95,23 @@ public abstract class GameService {
   abstract void join(@NonNull final UUID gameId, @NonNull final UUID requesterId);
 
   /**
+   * Closes an awaiting {@link Game}.
+   *
+   * @param gameId {@link Game}'s external identification:
+   *     <ul>
+   *       <li>Must belong to an existing {@link Game}.
+   *       <li>Must be in the {@link Game.Stage#IN_PROGRESS}.
+   *     </ul>
+   *
+   * @param requesterId Requesting {@link Player}'s external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active {@link Player}.
+   *       <li>Must be in the sending {@link Game}.
+   *     </ul>
+   */
+  abstract void close(@NonNull final UUID gameId, @NonNull final UUID requesterId);
+
+  /**
    * Requesting {@link Player} gives up the sending {@link Game} and sets the opponent as winner.
    *
    * @param gameId {@link Game}'s external identification:
@@ -138,8 +155,7 @@ public abstract class GameService {
 
     @Override
     public @NonNull Optional<Game> find(@NonNull final UUID id) {
-      return repository.findAll((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id)).stream()
-          .findFirst();
+      return repository.findOne((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id));
     }
 
     @Override
@@ -155,6 +171,11 @@ public abstract class GameService {
 
       final var toCreate = Game.builder().type(type).stage(AWAITS).home(player);
       return repository.save(toCreate.build()).getExternalId();
+    }
+
+    @Override
+    public void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
+      repository.save(game.resultFrom(bitboard));
     }
 
     @Override
@@ -190,8 +211,15 @@ public abstract class GameService {
     }
 
     @Override
-    public void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
-      repository.save(game.resultFrom(bitboard));
+    void close(@NonNull final UUID gameId, @NonNull final UUID requesterId) {
+      final var game = find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
+      ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == AWAITS);
+
+      final var opt = playerService.find(requesterId);
+      final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
+      PLAYER_NOT_IN_GAME.unless(game.getHome() == player);
+
+      repository.delete(game);
     }
   }
 
