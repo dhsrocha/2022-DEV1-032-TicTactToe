@@ -1,5 +1,9 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
+import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
+import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.TURN_LAST_SAME_PLAYER;
+
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
@@ -19,10 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.ACTION_LAST_SAME_PLAYER;
-import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 /**
  * Handles features related to {@link Turn} concerns.
@@ -116,7 +116,7 @@ public abstract class TurnService {
 
       final var fromGame = repository.findAll().stream().filter(a -> a.getGame() == game);
       final var last = fromGame.max(Comparator.comparing(Domain::getCreatedAt));
-      ACTION_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
+      TURN_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
 
       final var state = Bitboard.of(bitboard);
       final var toCreate = Turn.builder().state(state).game(game).player(player).build();

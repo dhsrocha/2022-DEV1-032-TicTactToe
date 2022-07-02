@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
 /**
- * System's unique exception, to holld.
+ * Assembles the system's exception codes regarding a business concern.
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
@@ -33,9 +33,9 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   /** {@link Game} is not in an in-progress stage. */
   GAME_NOT_IN_PROGRESS(HttpStatus.CONFLICT),
 
-  // Action
-  /** {@link Turn} is not . */
-  ACTION_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
+  // Turn
+  /** {@link Turn} which the same {@link Player} did in the last turn. */
+  TURN_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
   ;
   /** Corresponding HTTP status. */
   private final HttpStatus code;
