@@ -10,6 +10,7 @@ import com.dhsrocha.kata.tictactoe.feature.game.GameService;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Comparator;
 import java.util.Optional;
@@ -74,7 +75,7 @@ public abstract class TurnService {
    * @return {@link Turn}'s external identification.
    */
   abstract @NonNull UUID create(
-      @NonNull final UUID gameId, @NonNull final UUID requesterId, final int bitboard);
+      @NonNull final UUID gameId, @NonNull final UUID requesterId, final Bitboard bitboard);
 
   /** {@inheritDoc} */
   @SuppressWarnings("unused")
@@ -107,7 +108,7 @@ public abstract class TurnService {
 
     @Override
     @NonNull
-    UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final int bitboard) {
+    UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final Bitboard bitboard) {
       final var game = gameService.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
@@ -118,10 +119,9 @@ public abstract class TurnService {
       final var last = fromGame.max(Comparator.comparing(Domain::getCreatedAt));
       TURN_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
 
-      final var state = Bitboard.of(bitboard);
-      final var toCreate = Turn.builder().state(state).game(game).player(player).build();
+      final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
       final var created = repository.save(toCreate).getExternalId();
-      gameService.calculate(game, state);
+      gameService.calculate(game, bitboard);
       return created;
     }
   }

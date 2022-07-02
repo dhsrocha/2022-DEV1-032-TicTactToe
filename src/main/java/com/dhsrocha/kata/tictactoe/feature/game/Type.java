@@ -10,11 +10,11 @@ import static java.util.Arrays.stream;
 enum Type {
   TIC_TAC_TOE {
     @Override
-    public Game.Result process(final int bitboard) {
+    public Game.Result process(final long bitboard) {
       if (bitboard < 0) {
         throw new IllegalArgumentException(MSG_POSITIVE);
       }
-      final var rounds = Integer.bitCount(bitboard);
+      final var rounds = Long.bitCount(bitboard);
       if (rounds > 9) {
         throw new IllegalArgumentException(MSG_BITS);
       }
@@ -92,5 +92,5 @@ enum Type {
    * @param bitboard The boards' state in bitboard notation.
    * @return A outgoing result of the state.
    */
-  abstract Game.Result process(final int bitboard);
+  abstract Game.Result process(final long bitboard);
 }

@@ -1,6 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -89,8 +90,8 @@ class TurnController implements BaseController {
   ResponseEntity<?> create(
       @RequestParam final UUID gameId,
       @RequestParam final UUID requesterId,
-      @RequestParam final int bitboard) {
-    final var created = service.create(gameId, requesterId, bitboard);
+      @RequestParam final long bitboard) {
+    final var created = service.create(gameId, requesterId, Bitboard.of(bitboard));
     final var uri = ServletUriComponentsBuilder.fromCurrentRequest();
     final var location = uri.pathSegment(String.valueOf(created)).build().toUri();
     return ResponseEntity.created(location).build();

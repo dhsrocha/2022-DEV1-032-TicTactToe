@@ -3,6 +3,7 @@ package com.dhsrocha.kata.tictactoe.feature.turn;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Comparator;

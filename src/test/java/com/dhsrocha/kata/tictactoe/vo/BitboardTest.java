@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.feature.turn;
+package com.dhsrocha.kata.tictactoe.vo;
 
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import org.junit.jupiter.api.Assertions;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @DisplayName("Test suite for Bitboard class.")
-final class BitboardTest implements RandomStubExtension {
+public final class BitboardTest implements RandomStubExtension {
 
   @Test
   @DisplayName(
@@ -41,7 +41,7 @@ final class BitboardTest implements RandomStubExtension {
     Assertions.assertFalse(violations.isEmpty());
   }
 
-  static Bitboard validStub() {
+  public static Bitboard validStub() {
     final var base3 = Integer.toString(FAKER.number().randomDigit(), 3);
     final var nineChars = base3.length() > 9 ? base3.substring(base3.length() - 9) : base3;
     return Bitboard.of(Integer.parseInt(nineChars));

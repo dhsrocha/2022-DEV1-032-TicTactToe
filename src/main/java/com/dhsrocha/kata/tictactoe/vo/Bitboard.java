@@ -1,6 +1,7 @@
-package com.dhsrocha.kata.tictactoe.feature.turn;
+package com.dhsrocha.kata.tictactoe.vo;
 
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 
+
 /**
  * Representation of board's state of a {@link Game} in the moment an {@link Turn} is occurred.
  *
@@ -24,17 +26,17 @@ import lombok.Setter;
  */
 @Embeddable
 @Data
-@Setter(AccessLevel.PACKAGE)
-@NoArgsConstructor
+@Setter(AccessLevel.NONE)
 @AllArgsConstructor(staticName = "of")
-public class Bitboard implements Serializable, Comparable<Bitboard> {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class Bitboard implements Serializable, Comparable<Bitboard> {
 
   /** Comparison criteria. */
   private static final Comparator<Bitboard> COMPARATOR = Comparator.comparing(Bitboard::getState);
   /** Value in bitboard notation. */
-  @Schema(description = "Value in bitboard notation.")
+  @Schema(description = "State in bitboard notation.")
   @PositiveOrZero
-  private int state;
+  private long state;
 
   @Override
   public int compareTo(@NonNull final Bitboard other) {

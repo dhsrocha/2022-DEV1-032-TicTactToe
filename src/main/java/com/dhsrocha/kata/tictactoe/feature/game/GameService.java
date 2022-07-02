@@ -7,7 +7,7 @@ import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAM
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
-import com.dhsrocha.kata.tictactoe.feature.turn.Bitboard;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
