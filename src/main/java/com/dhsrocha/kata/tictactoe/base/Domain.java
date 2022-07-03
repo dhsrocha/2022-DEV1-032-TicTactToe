@@ -23,6 +23,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 /**
  * Abstraction for the domain layer.<br>
@@ -92,6 +94,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @PastOrPresent
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
+  @DateTimeFormat(iso = ISO.DATE_TIME)
   private OffsetDateTime createdAt;
 
   /** Record's last update timestamp. Null as initial value. */
@@ -103,6 +106,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @PastOrPresent
   @LastModifiedDate
   @Column(name = "updated_at")
+  @DateTimeFormat(iso = ISO.DATE_TIME)
   private OffsetDateTime updatedAt;
 
   @Schema(hidden = true)
