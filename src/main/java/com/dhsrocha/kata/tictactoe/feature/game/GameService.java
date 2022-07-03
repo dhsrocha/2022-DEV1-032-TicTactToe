@@ -7,12 +7,11 @@ import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAM
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
-import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +19,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -163,11 +163,8 @@ public abstract class GameService {
       final var opt = playerService.find(requesterId);
       final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
 
-      final var games = repository.findAll();
-      final Predicate<Game> isOngoing = g -> g.getStage() == AWAITS || g.getStage() == IN_PROGRESS;
-      final Predicate<Game> isIn =
-          g -> g.getHome() == player || null != g.getAway() && g.getAway() == player;
-      ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(games.stream().noneMatch(isOngoing.and(isIn)));
+      ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(
+          repository.findAll(isInOngoingGame(player)).isEmpty());
 
       final var toCreate = Game.builder().type(type).stage(AWAITS).home(player);
       return repository.save(toCreate.build()).getExternalId();
@@ -187,11 +184,8 @@ public abstract class GameService {
       final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
       ExceptionCode.PLAYER_ALREADY_IN_GAME.unless(game.getHome() != player);
 
-      final var games = repository.findAll();
-      final Predicate<Game> isOngoing = g -> g.getStage() == AWAITS || g.getStage() == IN_PROGRESS;
-      final Predicate<Game> isIn =
-          g -> g.getHome() == player || null != g.getAway() && g.getAway() == player;
-      ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(games.stream().noneMatch(isOngoing.and(isIn)));
+      ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(
+          repository.findAll(isInOngoingGame(player)).isEmpty());
 
       game.setAway(player);
       game.setStage(game.getStage().getNext());
@@ -220,6 +214,15 @@ public abstract class GameService {
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player);
 
       repository.delete(game);
+    }
+
+    private static Specification<Game> isInOngoingGame(@NonNull final Player player) {
+      return (r, cq, cb) ->
+          cb.and(
+              cb.or(cb.equal(r.get(Search.HOME), player), cb.equal(r.get(Search.AWAY), player)),
+              cb.or(
+                  cb.equal(r.get(Search.STAGE), AWAITS),
+                  cb.equal(r.get(Search.STAGE), IN_PROGRESS)));
     }
   }
 

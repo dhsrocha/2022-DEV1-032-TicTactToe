@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 
-
 /**
  * Representation of board's state of a {@link Game} in the moment an {@link Turn} is occurred.
  *

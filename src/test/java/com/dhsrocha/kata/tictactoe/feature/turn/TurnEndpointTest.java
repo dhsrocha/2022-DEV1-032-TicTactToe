@@ -77,11 +77,15 @@ final class TurnEndpointTest {
     final var game = idFrom(gameFor(opener));
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act
-    final var res = notOverTurnFor(game, opener).andExpect(status().isCreated());
+    final var resOpener = notOverTurnFor(game, opener).andExpect(status().isCreated());
+    final var resJoiner = notOverTurnFor(game, joiner).andExpect(status().isCreated());
     // Assert
-    retrieve(res)
+    retrieve(resOpener)
         .andExpect(jsonPath("$.game.externalId", is(game.toString())))
         .andExpect(jsonPath("$.player.externalId", is(opener.toString())));
+    retrieve(resJoiner)
+        .andExpect(jsonPath("$.game.externalId", is(game.toString())))
+        .andExpect(jsonPath("$.player.externalId", is(joiner.toString())));
   }
 
   @Test
@@ -100,7 +104,7 @@ final class TurnEndpointTest {
     joinIn(game, joiner).andExpect(status().isNoContent());
     // Act
     notOverTurnFor(game, opener).andExpect(status().isCreated());
-    turnFor(game, joiner, 0b000101010111000000).andExpect(status().isCreated());
+    turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
     retrieve(res).andExpect(jsonPath("$.winner.externalId", is(joiner.toString())));
   }
 
@@ -173,18 +177,21 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "AND previous turn done by requester "
+          + "AND previous turns done by opener, joiner and then opener again "
           + "WHEN creating an turn "
           + "THEN return exception with code Turn_LAST_SAME_PLAYER.")
-  void givenInProgressGame_andPreviousTurn_whenCreating_thenReturn409_Turn_LAST_SAME_PLAYER()
+  void givenInProgressGame_andPreviousTurns_whenCreating_thenReturn409_Turn_LAST_SAME_PLAYER()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
     final var game = idFrom(gameFor(opener));
     joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act
+
     notOverTurnFor(game, opener).andExpect(status().isCreated());
+    notOverTurnFor(game, joiner).andExpect(status().isCreated());
+    notOverTurnFor(game, opener).andExpect(status().isCreated());
+    // Act - Assert
     notOverTurnFor(game, opener).andExpect(status().isConflict());
   }
 

@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -108,21 +109,29 @@ public abstract class TurnService {
 
     @Override
     @NonNull
-    UUID create(@NonNull final UUID gameId, @NonNull final UUID requester, final Bitboard bitboard) {
+    UUID create(
+        @NonNull final UUID gameId, @NonNull final UUID requester, final Bitboard bitboard) {
       final var game = gameService.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
       final var player = playerService.find(requester).orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
 
-      final var fromGame = repository.findAll().stream().filter(a -> a.getGame() == game);
-      final var last = fromGame.max(Comparator.comparing(Domain::getCreatedAt));
+      final var fromGame = repository.findAll(specWith(game), Pageable.ofSize(2)).getContent();
+      final var last = fromGame.stream().max(Comparator.comparing(Domain::getCreatedAt));
       TURN_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
 
       final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
       final var created = repository.save(toCreate).getExternalId();
       gameService.calculate(game, bitboard);
       return created;
+    }
+
+    private static Specification<Turn> specWith(@NonNull final Game game) {
+      return (r, cq, cb) -> {
+        cq.orderBy(cb.desc(r.get(Domain.CREATED_AT)));
+        return cb.equal(r.get(Search.GAME), game);
+      };
     }
   }
 

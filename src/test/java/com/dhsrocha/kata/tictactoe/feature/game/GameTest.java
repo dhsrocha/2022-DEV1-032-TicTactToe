@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
-import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

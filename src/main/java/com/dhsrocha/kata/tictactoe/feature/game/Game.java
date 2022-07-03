@@ -2,9 +2,9 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
-import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Comparator;
