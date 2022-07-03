@@ -1,6 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +23,7 @@ final class TicTacToeTest implements RandomStubExtension {
       "GIVEN valid bitboard "
           + "WHEN calculating a bitboard with tic-tac-toe rule set "
           + "THEN return expected result accordingly.")
-  void ticTacToeBitboard(final int bitboard, final Game.Result expected) {
+  void ticTacToeBitboard(final int bitboard, final Bitboard.Result expected) {
     // Act
     final var actual = Type.TIC_TAC_TOE.process(bitboard);
     // Assert
@@ -44,21 +45,21 @@ final class TicTacToeTest implements RandomStubExtension {
   private static Stream<Arguments> validStubsAndResults() {
     return Stream.of(
         // Home
-        Arguments.of(Integer.parseInt("100010001" + "010001010", 2), Game.Result.HOME),
-        Arguments.of(Integer.parseInt("010010010" + "001001000", 2), Game.Result.HOME),
-        Arguments.of(Integer.parseInt("111000010" + "000011001", 2), Game.Result.HOME),
+        Arguments.of(0b100_010_001__010_001_010, Bitboard.Result.HOME),
+        Arguments.of(0b010_010_010__000_100_100, Bitboard.Result.HOME),
+        Arguments.of(0b111_000_010__000_011_001, Bitboard.Result.HOME),
         // Away
-        Arguments.of(Integer.parseInt("010001010" + "100010001", 2), Game.Result.AWAY),
-        Arguments.of(Integer.parseInt("001001000" + "010010010", 2), Game.Result.AWAY),
-        Arguments.of(Integer.parseInt("000011001" + "111000010", 2), Game.Result.AWAY),
+        Arguments.of(0b010_001_010__100_010_001, Bitboard.Result.AWAY),
+        Arguments.of(0b001_001_000__010_010_010, Bitboard.Result.AWAY),
+        Arguments.of(0b000_011_001__111_000_010, Bitboard.Result.AWAY),
         // Tie
-        Arguments.of(Integer.parseInt("010011100" + "101100011", 2), Game.Result.TIE),
-        Arguments.of(Integer.parseInt("001110010" + "110001101", 2), Game.Result.TIE),
-        Arguments.of(Integer.parseInt("101010010" + "010101101", 2), Game.Result.TIE),
+        Arguments.of(0b010_011_100__101_100_011, Bitboard.Result.TIE),
+        Arguments.of(0b001_110_010__110_001_101, Bitboard.Result.TIE),
+        Arguments.of(0b101_010_010__010_101_101, Bitboard.Result.TIE),
         // Not over
-        Arguments.of(Integer.parseInt("000000011" + "000000001", 2), Game.Result.NOT_OVER),
-        Arguments.of(Integer.parseInt("001001010" + "000100101", 2), Game.Result.NOT_OVER),
-        Arguments.of(Integer.parseInt("000110001" + "000000110", 2), Game.Result.NOT_OVER));
+        Arguments.of(0b000_000_011__000_000_001, Bitboard.Result.NOT_OVER),
+        Arguments.of(0b001_001_010__000_100_101, Bitboard.Result.NOT_OVER),
+        Arguments.of(0b000_110_001__000_000_110, Bitboard.Result.NOT_OVER));
   }
 
   private static Stream<Integer> invalidStubsAndResults() {

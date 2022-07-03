@@ -2,6 +2,8 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import static java.util.Arrays.stream;
 
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
+
 /**
  * Game type, holds a game's rule set to process a game in given state.
  *
@@ -10,7 +12,7 @@ import static java.util.Arrays.stream;
 enum Type {
   TIC_TAC_TOE {
     @Override
-    public Game.Result process(final long bitboard) {
+    public Bitboard.Result process(final long bitboard) {
       if (bitboard < 0) {
         throw new IllegalArgumentException(MSG_POSITIVE);
       }
@@ -19,13 +21,15 @@ enum Type {
         throw new IllegalArgumentException(MSG_BITS);
       }
       if (rounds < 5) {
-        return Game.Result.NOT_OVER;
+        return Bitboard.Result.NOT_OVER;
       }
       final var homeWon = stream(WIN_STATES).anyMatch(w -> w == (w & (bitboard >> 9)));
       final var awayWon = stream(WIN_STATES).anyMatch(w -> w == (w & (bitboard & (1 << 9) - 1)));
       return rounds == 9 && homeWon == awayWon
-          ? Game.Result.TIE
-          : homeWon ? Game.Result.HOME : awayWon ? Game.Result.AWAY : Game.Result.NOT_OVER;
+          ? Bitboard.Result.TIE
+          : homeWon
+              ? Bitboard.Result.HOME
+              : awayWon ? Bitboard.Result.AWAY : Bitboard.Result.NOT_OVER;
     }
 
     /** Winning states. */
@@ -36,49 +40,49 @@ enum Type {
            * |     |
            * |     |
            */
-          0b111000000,
+          0b111_000_000,
           /*
            * |     |
            * |o o o|
            * |     |
            */
-          0b000111000,
+          0b000_111_000,
           /*
            * |     |
            * |     |
            * |o o o|
            */
-          0b000000111,
+          0b000_000_111,
           /*
            * |o    |
            * |o    |
            * |o    |
            */
-          0b100100100,
+          0b100_100_100,
           /*
            * |  o  |
            * |  o  |
            * |  o  |
            */
-          0b010010010,
+          0b010_010_010,
           /*
            * |    o|
            * |    o|
            * |    o|
            */
-          0b001001001,
+          0b001_001_001,
           /*
            * |o    |
            * |  o  |
            * |    o|
            */
-          0b100010001,
+          0b100_010_001,
           /*
            * |    o|
            * |  o  |
            * |o    |
            */
-          0b001010100
+          0b001_010_100
         };
   },
   ;
@@ -92,5 +96,5 @@ enum Type {
    * @param bitboard The boards' state in bitboard notation.
    * @return A outgoing result of the state.
    */
-  abstract Game.Result process(final long bitboard);
+  abstract Bitboard.Result process(final long bitboard);
 }

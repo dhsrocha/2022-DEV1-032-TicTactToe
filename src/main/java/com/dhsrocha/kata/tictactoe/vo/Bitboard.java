@@ -10,6 +10,7 @@ import javax.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
@@ -34,11 +35,30 @@ public final class Bitboard implements Serializable, Comparable<Bitboard> {
   private static final Comparator<Bitboard> COMPARATOR = Comparator.comparing(Bitboard::getState);
   /** Value in bitboard notation. */
   @Schema(description = "State in bitboard notation.")
-  @PositiveOrZero
-  private long state;
+  private @PositiveOrZero long state;
 
   @Override
   public int compareTo(@NonNull final Bitboard other) {
     return COMPARATOR.compare(this, other);
+  }
+
+  /**
+   * Represents the outgoing result of a game.
+   *
+   * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
+   */
+  @AllArgsConstructor
+  public enum Result {
+    /** {@link Game} is over with {@link Game#getHome()} player as the winner. */
+    HOME(true),
+    /** {@link Game} is over with {@link Game#getAway()} player as the winner. */
+    AWAY(true),
+    /** {@link Game} is finished and there is no possibility to perform another actions on it. */
+    TIE(false),
+    /** {@link Game} is not over. */
+    NOT_OVER(false),
+    ;
+    /** The result has a determined winner. */
+    private final @Getter boolean isFinished;
   }
 }
