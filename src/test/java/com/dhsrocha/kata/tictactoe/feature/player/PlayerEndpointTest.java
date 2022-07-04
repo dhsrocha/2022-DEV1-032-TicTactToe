@@ -166,6 +166,20 @@ final class PlayerEndpointTest {
 
   @Test
   @DisplayName(
+      "GIVEN random external id " //
+          + "WHEN finding player "
+          + "THEN return status 404.")
+  void givenRandomId_whenFinding_thenReturnStatus404_PLAYER_NOT_FOUND() throws Exception {
+    // Arrange
+    final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+    // Act
+    final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+    // Assert
+    res.andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName(
       "GIVEN created player resource "
           + "WHEN updating player resource "
           + "THEN return resource with updated attributes "
@@ -213,8 +227,7 @@ final class PlayerEndpointTest {
         .andExpect(status().isNoContent());
     // Assert
     mvc.perform(get(uri).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-        .andExpect(status().isNotFound())
-        .andExpect(content().string(""));
+        .andExpect(status().isNotFound());
     final var stream = repository.findAll().stream();
     assertEquals(1, stream.filter(p -> p.getUsername().equals(stub.getUsername())).count());
   }

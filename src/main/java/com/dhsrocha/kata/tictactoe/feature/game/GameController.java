@@ -1,6 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
+import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -8,7 +9,6 @@ import lombok.AllArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -66,7 +66,7 @@ class GameController implements BaseController {
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @GetMapping('{' + Game.ID + '}')
   Game find(@PathVariable(Game.ID) final UUID gameId) {
-    return service.find(gameId).orElseThrow(ResourceNotFoundException::new);
+    return service.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
   }
 
   /**

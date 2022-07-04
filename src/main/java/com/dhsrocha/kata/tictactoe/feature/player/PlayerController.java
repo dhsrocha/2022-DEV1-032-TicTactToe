@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -64,7 +63,7 @@ class PlayerController implements BaseController {
   @ApiResponse(responseCode = "404", description = "Player not found.")
   @GetMapping('{' + Player.ID + '}')
   Player find(@PathVariable(Player.ID) final UUID playerId) {
-    return service.find(playerId).orElseThrow(ResourceNotFoundException::new);
+    return service.find(playerId).orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
   }
 
   /**

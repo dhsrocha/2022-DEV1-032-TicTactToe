@@ -34,6 +34,8 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   GAME_NOT_IN_PROGRESS(HttpStatus.CONFLICT),
 
   // Turn
+  /** {@link Turn} could not be found. */
+  TURN_NOT_FOUND(HttpStatus.NOT_FOUND),
   /** {@link Turn} which the same {@link Player} did in the last turn. */
   TURN_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
   ;

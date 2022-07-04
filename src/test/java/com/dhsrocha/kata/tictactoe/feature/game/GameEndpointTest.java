@@ -67,6 +67,20 @@ final class GameEndpointTest {
 
   @Test
   @DisplayName(
+      "GIVEN random external id " //
+          + "WHEN finding game "
+          + "THEN return status 404.")
+  void givenRandomId_whenFinding_thenReturnStatus404_GAME_NOT_FOUND() throws Exception {
+    // Arrange
+    final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+    // Act
+    final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+    // Assert
+    res.andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName(
       "GIVEN a persisted player "
           + "WHEN opening a game "
           + "THEN return Game is created "

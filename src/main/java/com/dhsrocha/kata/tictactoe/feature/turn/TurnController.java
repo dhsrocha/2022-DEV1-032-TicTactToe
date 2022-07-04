@@ -1,6 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
+import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -9,7 +10,6 @@ import lombok.AllArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,7 +58,7 @@ class TurnController implements BaseController {
   @ApiResponse(responseCode = "404", description = "Action not found.")
   @GetMapping('{' + Turn.ID + '}')
   Turn find(@PathVariable(Turn.ID) final UUID turnId) {
-    return service.find(turnId).orElseThrow(ResourceNotFoundException::new);
+    return service.find(turnId).orElseThrow(ExceptionCode.TURN_NOT_FOUND);
   }
 
   /**
