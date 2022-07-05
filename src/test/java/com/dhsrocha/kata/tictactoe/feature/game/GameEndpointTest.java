@@ -2,6 +2,8 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,6 +17,7 @@ import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.NonNull;
@@ -89,7 +92,18 @@ final class GameEndpointTest {
     // Act
     final var res = openFor(player().getExternalId()).andExpect(status().isCreated());
     // Assert
-    retrieve(res).andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())));
+    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(APPLICATION_JSON))
+      .andExpect(jsonPath("$.totalElements", is(1)));
+    retrieve(res)
+        .andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(APPLICATION_JSON))
+        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.externalId").doesNotExist())
+        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
   }
 
   @Test
@@ -227,7 +241,7 @@ final class GameEndpointTest {
     joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
         .andExpect(status().isNoContent());
     // Assert
-    retrieve(res).andExpect(jsonPath("$.winner.externalId", is(opener.toString())));
+    retrieve(res).andExpect(jsonPath("$.winner.id", is(opener.toString())));
   }
 
   @Test

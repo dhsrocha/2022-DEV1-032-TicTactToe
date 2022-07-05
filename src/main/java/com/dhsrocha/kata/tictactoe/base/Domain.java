@@ -11,7 +11,6 @@ import javax.persistence.Column;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
-import javax.validation.constraints.PastOrPresent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -80,7 +79,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
       description = "Surrogate key. Meant to be handled by the outside world.",
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "ed3d3509-cd6e-4a21-a021-f6826440935a")
-  @JsonProperty(access = Access.READ_ONLY)
+  @JsonProperty(value = "id", access = Access.READ_ONLY)
   @Type(type = "uuid-char")
   @Column(nullable = false, unique = true, updatable = false)
   private UUID externalId;
@@ -91,7 +90,6 @@ public abstract class Domain extends AbstractPersistable<Long> {
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "1986-08-19T10:20:00.000Z")
   @JsonProperty(access = Access.READ_ONLY)
-  @PastOrPresent
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   @DateTimeFormat(iso = ISO.DATE_TIME)
@@ -103,7 +101,6 @@ public abstract class Domain extends AbstractPersistable<Long> {
       accessMode = Schema.AccessMode.READ_ONLY,
       example = "1986-08-19T10:20:00.000Z")
   @JsonProperty(access = Access.READ_ONLY)
-  @PastOrPresent
   @LastModifiedDate
   @Column(name = "updated_at")
   @DateTimeFormat(iso = ISO.DATE_TIME)
@@ -112,14 +109,14 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @Schema(hidden = true)
   @JsonIgnore
   @Override
-  public Long getId() {
+  public final Long getId() {
     return super.getId();
   }
 
   @Schema(hidden = true)
   @JsonIgnore
   @Override
-  public boolean isNew() {
+  public final boolean isNew() {
     return super.isNew();
   }
 

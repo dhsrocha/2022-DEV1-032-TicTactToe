@@ -76,10 +76,10 @@ final class PlayerEndpointTest {
     mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.id").doesNotExist())
         .andExpect(jsonPath("$.active", is(Boolean.TRUE)))
         .andExpect(jsonPath("$.username", is(stub.getUsername())))
-        .andExpect(jsonPath("$.externalId", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.externalId").doesNotExist())
         .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
         .andExpect(jsonPath("$.updatedAt", is(nullValue())));
   }
@@ -157,7 +157,7 @@ final class PlayerEndpointTest {
         .andExpect(jsonPath("$.number", is(0)))
         .andExpect(jsonPath("$.size", is(20)))
         .andExpect(jsonPath("$.totalElements", is(3)))
-        .andExpect(jsonPath("$.content..externalId", hasItems(ids)))
+        .andExpect(jsonPath("$.content..id", hasItems(ids)))
         .andExpect(jsonPath("$.content..username", hasItems(usernames)))
         .andExpect(jsonPath("$.content..active", everyItem(is(Boolean.TRUE))))
         .andExpect(jsonPath("$.content..createdAt", everyItem(lessThan(now().toString()))))
@@ -204,10 +204,10 @@ final class PlayerEndpointTest {
     mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.id").doesNotExist())
+        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.externalId").doesNotExist())
         .andExpect(jsonPath("$.active", is(toUpdate.isActive())))
         .andExpect(jsonPath("$.username", is(toUpdate.getUsername())))
-        .andExpect(jsonPath("$.externalId", is(notNullValue(UUID.class))))
         .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
         .andExpect(jsonPath("$.updatedAt", is(notNullValue(OffsetDateTime.class))));
   }

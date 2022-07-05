@@ -2,6 +2,8 @@ package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,6 +17,7 @@ import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.NonNull;
@@ -55,7 +58,7 @@ final class TurnEndpointTest {
       "GIVEN no created resource "
           + "WHEN retrieving turn resources "
           + "THEN return an empty list.")
-  void givenNoCreated_whenRetrieving_returnEmptyList() throws Exception {
+  void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
     // Act / Assert
     mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -71,7 +74,7 @@ final class TurnEndpointTest {
       "GIVEN random external id " //
           + "WHEN finding turn "
           + "THEN return status 404.")
-  void givenRandomId_whenFinding_thenReturnStatus404_TURN_NOT_FOUND() throws Exception {
+  void givenRandomId_whenRetrieve_thenReturnStatus404_TURN_NOT_FOUND() throws Exception {
     // Arrange
     final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
     // Act
@@ -83,9 +86,9 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an turn "
+          + "WHEN creating a turn "
           + "THEN turn is created.")
-  void givenInProgressGame_whenCreating_thenTurnIsCreated() throws Exception {
+  void givenInProgressGame_whenCreate_thenTurnIsCreated() throws Exception {
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
     final var game = idFrom(gameFor(opener));
@@ -94,21 +97,33 @@ final class TurnEndpointTest {
     final var resOpener = notOverTurnFor(game, opener).andExpect(status().isCreated());
     final var resJoiner = notOverTurnFor(game, joiner).andExpect(status().isCreated());
     // Assert
+    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(APPLICATION_JSON))
+        .andExpect(jsonPath("$.totalElements", is(2)));
     retrieve(resOpener)
-        .andExpect(jsonPath("$.game.externalId", is(game.toString())))
-        .andExpect(jsonPath("$.player.externalId", is(opener.toString())));
+        .andExpect(jsonPath("$.game.id", is(game.toString())))
+        .andExpect(jsonPath("$.player.id", is(opener.toString())))
+        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.externalId").doesNotExist())
+        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
     retrieve(resJoiner)
-        .andExpect(jsonPath("$.game.externalId", is(game.toString())))
-        .andExpect(jsonPath("$.player.externalId", is(joiner.toString())));
+        .andExpect(jsonPath("$.game.id", is(game.toString())))
+        .andExpect(jsonPath("$.player.id", is(joiner.toString())))
+        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+        .andExpect(jsonPath("$.externalId").doesNotExist())
+        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
           + "AND away winning bitboard "
-          + "WHEN creating an turn "
+          + "WHEN creating a turn "
           + "THEN return away as winner for game.")
-  void givenInProgressGame_andHomeWinningBitboard_whenCreating_thenReturnHomeAsWinnerForGame()
+  void givenInProgressGame_andHomeWinningBitboard_whenCreate_thenReturnHomeAsWinnerForGame()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -119,15 +134,15 @@ final class TurnEndpointTest {
     // Act
     notOverTurnFor(game, opener).andExpect(status().isCreated());
     turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
-    retrieve(res).andExpect(jsonPath("$.winner.externalId", is(joiner.toString())));
+    retrieve(res).andExpect(jsonPath("$.winner.id", is(joiner.toString())));
   }
 
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an turn with random game id "
+          + "WHEN creating a turn with random game id "
           + "THEN return exception with code GAME_NOT_FOUND.")
-  void givenInProgressGame_whenCreatingRandomGameId_thenReturn409_GAME_NOT_FOUND()
+  void givenInProgressGame_whenCreate_withRandomGameId_thenReturn409_GAME_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -142,9 +157,9 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an turn "
+          + "WHEN creating a turn "
           + "THEN return exception with code GAME_NOT_IN_PROGRESS.")
-  void givenFinishedGame_whenCreating_thenReturn409_GAME_NOT_IN_PROGRESS() throws Exception {
+  void givenFinishedGame_whenCreate_thenReturn409_GAME_NOT_IN_PROGRESS() throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var res = gameFor(opener);
@@ -156,9 +171,9 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an turn "
+          + "WHEN creating a turn with random player id "
           + "THEN return exception with code PLAYER_NOT_FOUND.")
-  void givenInProgressGame_and2Players_whenCreatingRandomPlayerId_thenReturn404_PLAYER_NOT_FOUND()
+  void givenInProgressGame_and2Players_whenCreate_wRandomPlayerId_thenReturn404_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -173,9 +188,9 @@ final class TurnEndpointTest {
   @Test
   @DisplayName(
       "GIVEN in progress game " //
-          + "WHEN creating an turn "
+          + "WHEN creating a turn "
           + "THEN return exception with code PLAYER_NOT_IN_GAME.")
-  void givenInProgressGame_and3Players_whenCreating_thenReturn409_PLAYER_NOT_IN_GAME()
+  void givenInProgressGame_and3Players_whenCreate_thenReturn409_PLAYER_NOT_IN_GAME()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -192,9 +207,9 @@ final class TurnEndpointTest {
   @DisplayName(
       "GIVEN in progress game " //
           + "AND previous turns done by opener, joiner and then opener again "
-          + "WHEN creating an turn "
+          + "WHEN creating a turn "
           + "THEN return exception with code Turn_LAST_SAME_PLAYER.")
-  void givenInProgressGame_andPreviousTurns_whenCreating_thenReturn409_Turn_LAST_SAME_PLAYER()
+  void givenInProgressGame_andPreviousTurns_whenCreate_thenReturn409_Turn_LAST_SAME_PLAYER()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
