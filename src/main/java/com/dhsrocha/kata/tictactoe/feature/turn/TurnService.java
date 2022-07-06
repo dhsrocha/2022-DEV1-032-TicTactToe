@@ -12,7 +12,6 @@ import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -77,7 +76,9 @@ public abstract class TurnService {
    * @return {@link Turn}'s external identification.
    */
   abstract @NonNull UUID create(
-      @NonNull final UUID gameId, @NonNull final UUID requesterId, final Bitboard bitboard);
+      @NonNull final UUID gameId,
+      @NonNull final UUID requesterId,
+      @NonNull final Bitboard bitboard);
 
   /** {@inheritDoc} */
   @SuppressWarnings("unused")
@@ -111,16 +112,18 @@ public abstract class TurnService {
     @Override
     @NonNull
     UUID create(
-        @NonNull final UUID gameId, @NonNull final UUID requester, final Bitboard bitboard) {
+        @NonNull final UUID gameId,
+        @NonNull final UUID requester,
+        @NonNull final Bitboard bitboard) {
       final var game = gameService.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
       final var player = playerService.find(requester).orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
 
-      final var fromGame = repository.findAll(specWith(game), Pageable.ofSize(2)).getContent();
-      final var last = fromGame.stream().max(Comparator.comparing(Domain::getCreatedAt));
-      TURN_LAST_SAME_PLAYER.unless(last.filter(a -> a.getPlayer() == player).isEmpty());
+      final var lastRound =
+          repository.findAll(specWith(game), Pageable.ofSize(1)).getContent().stream().findFirst();
+      TURN_LAST_SAME_PLAYER.unless(lastRound.filter(t -> t.getPlayer() == player).isEmpty());
 
       final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
       final var created = repository.save(toCreate).getExternalId();

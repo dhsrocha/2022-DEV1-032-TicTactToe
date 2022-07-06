@@ -233,6 +233,7 @@ final class TurnEndpointTest {
       notOverTurnFor(game, opener).andExpect(status().isCreated());
       // Act - Assert
       notOverTurnFor(game, opener).andExpect(status().isConflict());
+      notOverTurnFor(game, joiner).andExpect(status().isCreated());
     }
   }
 
