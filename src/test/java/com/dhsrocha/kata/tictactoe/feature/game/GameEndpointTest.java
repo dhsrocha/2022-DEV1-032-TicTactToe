@@ -57,7 +57,7 @@ final class GameEndpointTest {
       "GIVEN no created resource "
           + "WHEN retrieving game resources "
           + "THEN return an empty list.")
-  void givenNoCreated_whenRetrieving_returnEmptyList() throws Exception {
+  void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
     // Act / Assert
     mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -73,7 +73,7 @@ final class GameEndpointTest {
       "GIVEN random external id " //
           + "WHEN finding game "
           + "THEN return status 404.")
-  void givenRandomId_whenFinding_thenReturnStatus404_GAME_NOT_FOUND() throws Exception {
+  void givenRandomId_whenRetrieve_thenReturnStatus404_GAME_NOT_FOUND() throws Exception {
     // Arrange
     final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
     // Act
@@ -88,7 +88,7 @@ final class GameEndpointTest {
           + "WHEN opening a game "
           + "THEN return Game is created "
           + "AND stage is awaits.")
-  void givenCreatedPlayer_whenOpening_thenReturnGameIsCreated_andStageIsAwaits() throws Exception {
+  void givenCreatedPlayer_whenOpen_thenReturnGameIsCreated_andStageIsAwaits() throws Exception {
     // Act
     final var res = openFor(player().getExternalId()).andExpect(status().isCreated());
     // Assert
@@ -110,7 +110,7 @@ final class GameEndpointTest {
   @DisplayName(
       "WHEN opening a game " //
           + "THEN return exception with code PLAYER_NOT_FOUND.")
-  void whenOpening_thenReturn404_PLAYER_NOT_FOUND() throws Exception {
+  void whenOpen_thenReturn404_PLAYER_NOT_FOUND() throws Exception {
     // Act - Assert
     openFor(UUID.randomUUID()).andExpect(status().isNotFound());
   }
@@ -120,7 +120,7 @@ final class GameEndpointTest {
       "GIVEN persisted game " //
           + "WHEN opening a game "
           + "THEN return exception with code PLAYER_ALREADY_IN_GAME.")
-  void givenOpenedGame_whenOpeningAgain_thenReturn409_PLAYER_ALREADY_IN_GAME() throws Exception {
+  void givenOpenedGame_whenOpenAgain_thenReturn409_PLAYER_ALREADY_IN_GAME() throws Exception {
     // Arrange
     final var created = player().getExternalId();
     openFor(created).andExpect(status().isCreated());
@@ -133,7 +133,7 @@ final class GameEndpointTest {
       "GIVEN 2 persisted players " //
           + "WHEN joining in a game "
           + "THEN game is in progress.")
-  void given2Players_whenJoining_requesterIsJoinedToGame() throws Exception {
+  void given2Players_whenJoin_requesterIsJoinedToGame() throws Exception {
     // Arrange
     final var opener = player();
     final var res = openFor(opener.getExternalId()).andExpect(status().isCreated());
@@ -150,7 +150,7 @@ final class GameEndpointTest {
   @DisplayName(
       "WHEN joining in a game with random game id "
           + "THEN return exception with code GAME_NOT_FOUND.")
-  void whenJoiningRandomGameId_thenReturnStatus409_GAME_NOT_FOUND() throws Exception {
+  void whenJoinRandomGameId_thenReturnStatus409_GAME_NOT_FOUND() throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
@@ -165,7 +165,7 @@ final class GameEndpointTest {
       "GIVEN persisted game in opened stage"
           + "WHEN joining in this game "
           + "THEN return exception with code GAME_NOT_IN_AWAITS.")
-  void givenOpenedGame_whenJoining_thenReturn409_GAME_NOT_IN_AWAITS() throws Exception {
+  void givenOpenedGame_whenJoin_thenReturn409_GAME_NOT_IN_AWAITS() throws Exception {
     // Arrange
     final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
     joinOrSurrender(game, player().getExternalId(), GameController.JOIN)
@@ -180,7 +180,7 @@ final class GameEndpointTest {
       "GIVEN opened game "
           + "WHEN joining in this game with random player id "
           + "THEN return exception with code PLAYER_NOT_FOUND.")
-  void givenOpenedGame_whenJoiningRandomPlayerId_thenReturnStatus409_PLAYER_NOT_FOUND()
+  void givenOpenedGame_whenJoinRandomPlayerId_thenReturnStatus409_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
     final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
@@ -193,17 +193,18 @@ final class GameEndpointTest {
       "GIVEN joined game " //
           + "WHEN joining in the already joined game "
           + "THEN return exception with code PLAYER_ALREADY_IN_GAME.")
-  void givenJoinedGame_whenJoiningAlreadyJoined_thenReturnStatus409_PLAYER_ALREADY_IN_GAME()
+  void givenJoinedGame_whenJoinAlreadyJoined_thenReturnStatus409_PLAYER_ALREADY_IN_GAME()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
-    final var res = openFor(opener);
-    final var game = idFrom(res.andExpect(status().isCreated()));
+    final var someone = player().getExternalId();
+    final var game = idFrom(openFor(opener).andExpect(status().isCreated()));
     joinOrSurrender(game, joiner, GameController.JOIN).andExpect(status().isNoContent());
     // Act - Assert
     joinOrSurrender(game, opener, GameController.JOIN).andExpect(status().isConflict());
     joinOrSurrender(game, joiner, GameController.JOIN).andExpect(status().isConflict());
+    joinOrSurrender(game, someone, GameController.JOIN).andExpect(status().isConflict());
   }
 
   @Test
@@ -211,7 +212,7 @@ final class GameEndpointTest {
       "GIVEN 2 opened games " //
           + "WHEN joining in the other one "
           + "THEN return exception with code PLAYER_IN_AN_ONGOING_GAME.")
-  void given2OpenedGames_whenJoiningToOther_thenReturnStatus409_PLAYER_IN_AN_ONGOING_GAME()
+  void given2OpenedGames_whenJoinToOther_thenReturnStatus409_PLAYER_IN_AN_ONGOING_GAME()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -230,7 +231,7 @@ final class GameEndpointTest {
           + "WHEN surrendering this game "
           + "THEN return finished game "
           + "AND winner is the opponent.")
-  void givenInProgressGame_whenSurrendering_thenReturnFinishedGame_andWinnerIsOpponent()
+  void givenInProgressGame_whenSurrender_thenReturnFinishedGame_andWinnerIsOpponent()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -249,7 +250,7 @@ final class GameEndpointTest {
       "GIVEN game with in progress state "
           + "WHEN surrendering this game "
           + "THEN return exception with code GAME_NOT_FOUND.")
-  void givenInProgressGame_whenSurrendering_withRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
+  void givenInProgressGame_whenSurrender_withRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -266,7 +267,7 @@ final class GameEndpointTest {
       "GIVEN game with opened state "
           + "WHEN surrendering this game "
           + "THEN return exception with code GAME_NOT_IN_PROGRESS.")
-  void givenFinishedGame_whenSurrendering_thenReturnStatus409_GAME_NOT_IN_PROGRESS()
+  void givenFinishedGame_whenSurrender_thenReturnStatus409_GAME_NOT_IN_PROGRESS()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -282,7 +283,7 @@ final class GameEndpointTest {
       "GIVEN game with in progress state "
           + "WHEN surrendering this game with random player id "
           + "THEN return exception with code PLAYER_NOT_FOUND.")
-  void givenInProgressGame_whenSurrenderingWithRandomPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
+  void givenInProgressGame_whenSurrenderWithRandomPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -302,7 +303,7 @@ final class GameEndpointTest {
           + "AND 3 players "
           + "WHEN surrendering this game "
           + "THEN return exception with code PLAYER_NOT_IN_GAME.")
-  void givenInProgressGame_and3Players_whenSurrendering_thenReturnStatus409_PLAYER_NOT_IN_GAME()
+  void givenInProgressGame_and3Players_whenSurrender_thenReturnStatus409_PLAYER_NOT_IN_GAME()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -322,7 +323,7 @@ final class GameEndpointTest {
           + "WHEN closing a game "
           + "THEN return status HTTP 204 "
           + "AND this is no longer found.")
-  void givenAwaitingGame_whenClosing_thenReturnStatus204_andGameIsNotFound() throws Exception {
+  void givenAwaitingGame_whenClose_thenReturnStatus204_andGameIsNotFound() throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var game = openFor(opener);
@@ -338,7 +339,7 @@ final class GameEndpointTest {
       "GIVEN game in progress stage "
           + "WHEN closing a game with random game id "
           + "THEN return status HTTP 404 with code GAME_NOT_FOUND.")
-  void givenInProgressGame_whenClosingWithRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
+  void givenInProgressGame_whenCloseWithRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -354,7 +355,7 @@ final class GameEndpointTest {
       "GIVEN game in progress stage "
           + "WHEN closing a game "
           + "THEN return status HTTP 409 with code GAME_NOT_IN_AWAITS.")
-  void givenInProgressGame_whenClosing_thenReturnStatus409_GAME_NOT_IN_AWAITS() throws Exception {
+  void givenInProgressGame_whenClose_thenReturnStatus409_GAME_NOT_IN_AWAITS() throws Exception {
     // Arrange
     final var opener = player().getExternalId();
     final var joiner = player().getExternalId();
@@ -371,7 +372,7 @@ final class GameEndpointTest {
       "GIVEN game in awaiting stage "
           + "WHEN closing a game with another player "
           + "THEN return status HTTP 404 with code PLAYER_NOT_FOUND.")
-  void givenOpeningGame_whenClosingWithAnotherPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
+  void givenOpeningGame_whenClose_wAnotherPlayer_thenReturnStatus409_PLAYER_NOT_FOUND()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
@@ -388,7 +389,7 @@ final class GameEndpointTest {
           + "AND some other active player "
           + "WHEN closing a game "
           + "THEN return status HTTP 404 with code PLAYER_NOT_IN_GAME.")
-  void givenAwaitingGame_andAnotherPlayer_whenClosing_thenReturnStatus409_PLAYER_NOT_IN_GAME()
+  void givenAwaitingGame_andAnotherPlayer_whenClose_thenReturnStatus409_PLAYER_NOT_IN_GAME()
       throws Exception {
     // Arrange
     final var opener = player().getExternalId();
