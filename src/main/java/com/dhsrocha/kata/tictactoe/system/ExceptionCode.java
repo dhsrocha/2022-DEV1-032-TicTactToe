@@ -3,6 +3,7 @@ package com.dhsrocha.kata.tictactoe.system;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,14 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   TURN_NOT_FOUND(HttpStatus.NOT_FOUND),
   /** {@link Turn} which the same {@link Player} did in the last turn. */
   TURN_LAST_SAME_PLAYER(HttpStatus.CONFLICT),
+
+  // Bitboard
+  /** {@link Bitboard}'s has not any bit set. */
+  BITBOARD_UNSET_STATE(HttpStatus.BAD_REQUEST),
+  /** {@link Bitboard}'s has more bits than predicted for {@link Game}'s set of rules. */
+  BITBOARD_EXCESSIVE_BITS(HttpStatus.BAD_REQUEST),
+  /** {@link Bitboard}'s has overlapping bits in its subsets. */
+  BITBOARD_PIECE_IN_SAME_TILE(HttpStatus.BAD_REQUEST),
   ;
   /** Corresponding HTTP status. */
   private final HttpStatus code;

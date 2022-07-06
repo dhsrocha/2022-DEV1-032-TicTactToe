@@ -107,7 +107,7 @@ public final class GameTest implements RandomStubExtension {
     final var game =
         validStub().toBuilder().stage(Game.Stage.IN_PROGRESS).type(Type.TIC_TAC_TOE).build();
     // Act
-    final var finished = game.resultFrom(Bitboard.of(0));
+    final var finished = game.resultFrom(Bitboard.of(0b100_010_001__011_001));
     // Assert
     assertNull(finished.getWinner());
     assertEquals(Game.Stage.IN_PROGRESS, finished.getStage());

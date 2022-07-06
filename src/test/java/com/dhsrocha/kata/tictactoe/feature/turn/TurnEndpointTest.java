@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Tag(Turn.TAG)
-@DisplayName("Suite to test features related to turn domain, under integration testing strategy.")
+@DisplayName("Suite to test features related to Turn domain, under integration testing strategy.")
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -236,7 +236,7 @@ final class TurnEndpointTest {
 
   private ResultActions notOverTurnFor(@NonNull final UUID game, @NonNull final UUID player)
       throws Exception {
-    return turnFor(game, player, 0b0);
+    return turnFor(game, player, 0b0_100_000_00__000_000_00);
   }
 
   private ResultActions turnFor(
