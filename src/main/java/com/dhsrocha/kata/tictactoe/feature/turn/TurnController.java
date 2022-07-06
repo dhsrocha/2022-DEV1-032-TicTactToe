@@ -62,7 +62,7 @@ class TurnController implements BaseController {
   }
 
   /**
-   * Opens a Action, by creating it as a resource, and adds the requesting player as the home one.
+   * Creates a Turn resource and attaches it to the Game in progress the requester is in.
    *
    * @param gameId Game's external identification:
    *     <ul>

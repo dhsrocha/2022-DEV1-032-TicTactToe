@@ -56,7 +56,8 @@ public abstract class TurnService {
   abstract @NonNull Optional<Turn> find(@NonNull final UUID turnId);
 
   /**
-   * Opens a Action, by creating it as a resource, and adds the requesting player as the home one.
+   * Creates a {@link Turn} resource and attaches it to the {@link Game} in progress the requester
+   * is in.
    *
    * @param gameId {@link Game}'s external identification:
    *     <ul>
