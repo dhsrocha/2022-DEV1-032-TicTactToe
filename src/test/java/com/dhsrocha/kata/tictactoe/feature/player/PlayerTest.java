@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-@DisplayName("Test suite for Player class.")
+@DisplayName("Test suite for '" + Player.TAG + "' domain.")
 public final class PlayerTest implements RandomStubExtension {
 
   @Test

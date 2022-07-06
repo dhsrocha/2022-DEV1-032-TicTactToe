@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,10 @@ import org.springframework.test.web.servlet.ResultActions;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Tag(Turn.TAG)
-@DisplayName("Suite to test features related to Turn domain, under integration testing strategy.")
+@DisplayName(
+    "Suite to test features related to '"
+        + Turn.TAG
+        + "' domain, under integration testing strategy.")
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -53,175 +57,183 @@ final class TurnEndpointTest {
   @Autowired MockMvc mvc;
   @Autowired BaseRepository<Player> playerRepository;
 
-  @Test
-  @DisplayName(
-      "GIVEN no created resource "
-          + "WHEN retrieving turn resources "
-          + "THEN return an empty list.")
-  void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
-    // Act / Assert
-    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.number", is(0)))
-        .andExpect(jsonPath("$.size", is(20)))
-        .andExpect(jsonPath("$.totalElements", is(0)))
-        .andExpect(jsonPath("$.content", hasSize(0)));
+  @Nested
+  @DisplayName("GET '" + BASE + "'")
+  class Retrieve {
+    @Test
+    @DisplayName(
+        "GIVEN no created resource "
+            + "WHEN retrieving turn resources "
+            + "THEN return an empty list.")
+    void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
+      // Act / Assert
+      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.number", is(0)))
+          .andExpect(jsonPath("$.size", is(20)))
+          .andExpect(jsonPath("$.totalElements", is(0)))
+          .andExpect(jsonPath("$.content", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName(
+        "GIVEN random external id " //
+            + "WHEN finding turn "
+            + "THEN return status 404.")
+    void givenRandomId_whenRetrieve_thenReturnStatus404_TURN_NOT_FOUND() throws Exception {
+      // Arrange
+      final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+      // Act
+      final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+      // Assert
+      res.andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "WHEN creating a turn "
+            + "THEN turn is created.")
+    void givenInProgressGame_whenCreate_thenTurnIsCreated() throws Exception {
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var game = idFrom(gameFor(opener));
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      // Act
+      final var resOpener = notOverTurnFor(game, opener).andExpect(status().isCreated());
+      final var resJoiner = notOverTurnFor(game, joiner).andExpect(status().isCreated());
+      // Assert
+      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.totalElements", is(2)));
+      retrieve(resOpener)
+          .andExpect(jsonPath("$.game.id", is(game.toString())))
+          .andExpect(jsonPath("$.player.id", is(opener.toString())))
+          .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+          .andExpect(jsonPath("$.externalId").doesNotExist())
+          .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+          .andExpect(jsonPath("$.updatedAt", is(nullValue())));
+      retrieve(resJoiner)
+          .andExpect(jsonPath("$.game.id", is(game.toString())))
+          .andExpect(jsonPath("$.player.id", is(joiner.toString())))
+          .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+          .andExpect(jsonPath("$.externalId").doesNotExist())
+          .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+          .andExpect(jsonPath("$.updatedAt", is(nullValue())));
+    }
   }
 
-  @Test
-  @DisplayName(
-      "GIVEN random external id " //
-          + "WHEN finding turn "
-          + "THEN return status 404.")
-  void givenRandomId_whenRetrieve_thenReturnStatus404_TURN_NOT_FOUND() throws Exception {
-    // Arrange
-    final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
-    // Act
-    final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
-    // Assert
-    res.andExpect(status().isNotFound());
-  }
+  @Nested
+  @DisplayName("POST '" + BASE + "'")
+  class Create {
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "AND away winning bitboard "
+            + "WHEN creating a turn "
+            + "THEN return away as winner for game.")
+    void givenInProgressGame_andHomeWinningBitboard_whenCreate_thenReturnHomeAsWinnerForGame()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var res = gameFor(opener);
+      final var game = idFrom(res);
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      // Act
+      notOverTurnFor(game, opener).andExpect(status().isCreated());
+      turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
+      retrieve(res).andExpect(jsonPath("$.winner.id", is(joiner.toString())));
+    }
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "WHEN creating a turn "
-          + "THEN turn is created.")
-  void givenInProgressGame_whenCreate_thenTurnIsCreated() throws Exception {
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var game = idFrom(gameFor(opener));
-    joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act
-    final var resOpener = notOverTurnFor(game, opener).andExpect(status().isCreated());
-    final var resJoiner = notOverTurnFor(game, joiner).andExpect(status().isCreated());
-    // Assert
-    mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.totalElements", is(2)));
-    retrieve(resOpener)
-        .andExpect(jsonPath("$.game.id", is(game.toString())))
-        .andExpect(jsonPath("$.player.id", is(opener.toString())))
-        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
-        .andExpect(jsonPath("$.externalId").doesNotExist())
-        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
-        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
-    retrieve(resJoiner)
-        .andExpect(jsonPath("$.game.id", is(game.toString())))
-        .andExpect(jsonPath("$.player.id", is(joiner.toString())))
-        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
-        .andExpect(jsonPath("$.externalId").doesNotExist())
-        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
-        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
-  }
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "WHEN creating a turn with random game id "
+            + "THEN return exception with code GAME_NOT_FOUND.")
+    void givenInProgressGame_whenCreate_withRandomGameId_thenReturn409_GAME_NOT_FOUND()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var res = gameFor(opener);
+      final var game = idFrom(res);
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      // Act - Assert
+      notOverTurnFor(UUID.randomUUID(), opener).andExpect(status().isNotFound());
+    }
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "AND away winning bitboard "
-          + "WHEN creating a turn "
-          + "THEN return away as winner for game.")
-  void givenInProgressGame_andHomeWinningBitboard_whenCreate_thenReturnHomeAsWinnerForGame()
-      throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var res = gameFor(opener);
-    final var game = idFrom(res);
-    joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act
-    notOverTurnFor(game, opener).andExpect(status().isCreated());
-    turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
-    retrieve(res).andExpect(jsonPath("$.winner.id", is(joiner.toString())));
-  }
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "WHEN creating a turn "
+            + "THEN return exception with code GAME_NOT_IN_PROGRESS.")
+    void givenFinishedGame_whenCreate_thenReturn409_GAME_NOT_IN_PROGRESS() throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var res = gameFor(opener);
+      final var game = idFrom(res);
+      // Act - Assert
+      notOverTurnFor(game, opener).andExpect(status().isConflict());
+    }
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "WHEN creating a turn with random game id "
-          + "THEN return exception with code GAME_NOT_FOUND.")
-  void givenInProgressGame_whenCreate_withRandomGameId_thenReturn409_GAME_NOT_FOUND()
-      throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var res = gameFor(opener);
-    final var game = idFrom(res);
-    joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act - Assert
-    notOverTurnFor(UUID.randomUUID(), opener).andExpect(status().isNotFound());
-  }
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "WHEN creating a turn with random player id "
+            + "THEN return exception with code PLAYER_NOT_FOUND.")
+    void givenInProgressGame_and2Players_whenCreate_wRandomPlayerId_thenReturn404_PLAYER_NOT_FOUND()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var res = gameFor(opener);
+      final var game = idFrom(res);
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      // Act - Assert
+      notOverTurnFor(game, UUID.randomUUID()).andExpect(status().isNotFound());
+    }
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "WHEN creating a turn "
-          + "THEN return exception with code GAME_NOT_IN_PROGRESS.")
-  void givenFinishedGame_whenCreate_thenReturn409_GAME_NOT_IN_PROGRESS() throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var res = gameFor(opener);
-    final var game = idFrom(res);
-    // Act - Assert
-    notOverTurnFor(game, opener).andExpect(status().isConflict());
-  }
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "WHEN creating a turn "
+            + "THEN return exception with code PLAYER_NOT_IN_GAME.")
+    void givenInProgressGame_and3Players_whenCreate_thenReturn409_PLAYER_NOT_IN_GAME()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var third = player().getExternalId();
+      final var res = gameFor(opener);
+      final var game = idFrom(res);
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      // Act - Assert
+      notOverTurnFor(game, third).andExpect(status().isConflict());
+    }
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "WHEN creating a turn with random player id "
-          + "THEN return exception with code PLAYER_NOT_FOUND.")
-  void givenInProgressGame_and2Players_whenCreate_wRandomPlayerId_thenReturn404_PLAYER_NOT_FOUND()
-      throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var res = gameFor(opener);
-    final var game = idFrom(res);
-    joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act - Assert
-    notOverTurnFor(game, UUID.randomUUID()).andExpect(status().isNotFound());
-  }
+    @Test
+    @DisplayName(
+        "GIVEN in progress game " //
+            + "AND previous turns done by opener, joiner and then opener again "
+            + "WHEN creating a turn "
+            + "THEN return exception with code Turn_LAST_SAME_PLAYER.")
+    void givenInProgressGame_andPreviousTurns_whenCreate_thenReturn409_Turn_LAST_SAME_PLAYER()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var game = idFrom(gameFor(opener));
+      joinIn(game, joiner).andExpect(status().isNoContent());
 
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "WHEN creating a turn "
-          + "THEN return exception with code PLAYER_NOT_IN_GAME.")
-  void givenInProgressGame_and3Players_whenCreate_thenReturn409_PLAYER_NOT_IN_GAME()
-      throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var third = player().getExternalId();
-    final var res = gameFor(opener);
-    final var game = idFrom(res);
-    joinIn(game, joiner).andExpect(status().isNoContent());
-    // Act - Assert
-    notOverTurnFor(game, third).andExpect(status().isConflict());
-  }
-
-  @Test
-  @DisplayName(
-      "GIVEN in progress game " //
-          + "AND previous turns done by opener, joiner and then opener again "
-          + "WHEN creating a turn "
-          + "THEN return exception with code Turn_LAST_SAME_PLAYER.")
-  void givenInProgressGame_andPreviousTurns_whenCreate_thenReturn409_Turn_LAST_SAME_PLAYER()
-      throws Exception {
-    // Arrange
-    final var opener = player().getExternalId();
-    final var joiner = player().getExternalId();
-    final var game = idFrom(gameFor(opener));
-    joinIn(game, joiner).andExpect(status().isNoContent());
-
-    notOverTurnFor(game, opener).andExpect(status().isCreated());
-    notOverTurnFor(game, joiner).andExpect(status().isCreated());
-    notOverTurnFor(game, opener).andExpect(status().isCreated());
-    // Act - Assert
-    notOverTurnFor(game, opener).andExpect(status().isConflict());
+      notOverTurnFor(game, opener).andExpect(status().isCreated());
+      notOverTurnFor(game, joiner).andExpect(status().isCreated());
+      notOverTurnFor(game, opener).andExpect(status().isCreated());
+      // Act - Assert
+      notOverTurnFor(game, opener).andExpect(status().isConflict());
+    }
   }
 
   private Player player() {

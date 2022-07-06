@@ -47,7 +47,10 @@ import org.springframework.test.web.servlet.MockMvc;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Tag(Player.TAG)
-@DisplayName("Suite to test features related to Player domain, under integration testing strategy.")
+@DisplayName(
+    "Suite to test features related to '"
+        + Player.TAG
+        + "' domain, under integration testing strategy.")
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -67,7 +70,7 @@ final class PlayerEndpointTest {
           + "AND other attributes are same as the one provided "
           + "AND created at attribute is not null "
           + "AND updated at attribute is null.")
-  void validBody_whenCreating_isActive_attrsAreSame_createdNotNull_updatedNull() throws Exception {
+  void validBody_whenCreate_isActive_attrsAreSame_createdNotNull_updatedNull() throws Exception {
     // Arrange
     final var stub = PlayerTest.validStub();
     // Act
@@ -123,7 +126,7 @@ final class PlayerEndpointTest {
       "GIVEN no created resource "
           + "WHEN retrieving player resources "
           + "THEN return an empty list.")
-  void givenNoCreated_whenRetrieving_returnEmptyList() throws Exception {
+  void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
     // Act / Assert
     mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -169,7 +172,7 @@ final class PlayerEndpointTest {
       "GIVEN random external id " //
           + "WHEN finding player "
           + "THEN return status 404.")
-  void givenRandomId_whenFinding_thenReturnStatus404_PLAYER_NOT_FOUND() throws Exception {
+  void givenRandomId_whenRetrieve_thenReturnStatus404_PLAYER_NOT_FOUND() throws Exception {
     // Arrange
     final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
     // Act

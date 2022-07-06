@@ -20,7 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-@DisplayName("Test suite for Game class.")
+@DisplayName("Test suite for '" + Game.TAG + "' domain.")
 public final class GameTest implements RandomStubExtension {
 
   @Test
