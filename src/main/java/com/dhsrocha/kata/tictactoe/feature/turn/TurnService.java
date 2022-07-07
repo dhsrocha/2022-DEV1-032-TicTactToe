@@ -73,9 +73,9 @@ public abstract class TurnService {
    *     </ul>
    *
    * @param bitboard Representation of {@link Game}'s state in {@link Bitboard} notation.
-   * @return {@link Turn}'s external identification.
+   * @return {@link Turn}'s external identification, if not finished the game.
    */
-  abstract @NonNull UUID create(
+  abstract @NonNull Optional<UUID> create(
       @NonNull final UUID gameId,
       @NonNull final UUID requesterId,
       @NonNull final Bitboard bitboard);
@@ -111,7 +111,7 @@ public abstract class TurnService {
 
     @Override
     @NonNull
-    UUID create(
+    Optional<UUID> create(
         @NonNull final UUID gameId,
         @NonNull final UUID requester,
         @NonNull final Bitboard bitboard) {
@@ -125,12 +125,13 @@ public abstract class TurnService {
           repository.findAll(turnsFrom(game), Pageable.ofSize(1)).getContent().stream().findFirst();
       TURN_LAST_SAME_PLAYER.unless(lastRound.filter(t -> t.getPlayer() == player).isEmpty());
 
-      final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
-      final var created = repository.save(toCreate).getExternalId();
       if (gameService.calculate(game, bitboard)) {
         repository.deleteAll(repository.findAll(turnsFrom(game)).stream().toList());
+        return Optional.empty();
       }
-      return created;
+
+      final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
+      return Optional.of(repository.save(toCreate).getExternalId());
     }
 
     private static Specification<Turn> turnsFrom(@NonNull final Game game) {

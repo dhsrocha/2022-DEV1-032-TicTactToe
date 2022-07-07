@@ -2,13 +2,17 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.base.BaseController;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URL;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -46,6 +50,7 @@ class GameController implements BaseController {
    * @param pg Pagination set of parameters.
    * @return Paginated set of resources, with additional information about it.
    */
+  @ApiResponse(responseCode = "200", description = "Game page is retrieved.")
   @GetMapping
   Page<Game> find(
       @ParameterObject final GameService.Search criteria, //
@@ -63,6 +68,7 @@ class GameController implements BaseController {
    *
    * @return Resource found.
    */
+  @ApiResponse(responseCode = "200", description = "Game is found.")
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @GetMapping('{' + Game.ID + '}')
   Game find(@PathVariable(Game.ID) final UUID gameId) {
@@ -81,6 +87,14 @@ class GameController implements BaseController {
    *
    * @return Resource's location URI in proper header.
    */
+  @ApiResponse(
+      responseCode = "201",
+      description = "Game opened.",
+      headers =
+          @Header(
+              name = HttpHeaders.LOCATION,
+              description = "Resource's location.",
+              schema = @Schema(implementation = URL.class)))
   @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
   @ApiResponse(responseCode = "409", description = "Requesting player is in a ongoing game.")
   @PostMapping
@@ -108,6 +122,7 @@ class GameController implements BaseController {
    *       <li>Must not be in an ongoing game.
    *     </ul>
    */
+  @ApiResponse(responseCode = "204", description = "Joined to the sending game.")
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @ApiResponse(responseCode = "409", description = "Game is not in awaiting stage.")
   @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
@@ -134,6 +149,7 @@ class GameController implements BaseController {
    *       <li>Must be in the sending game.
    *     </ul>
    */
+  @ApiResponse(responseCode = "204", description = "Surrendered on sending game.")
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @ApiResponse(responseCode = "409", description = "Game is not in in progress stage.")
   @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
@@ -159,6 +175,7 @@ class GameController implements BaseController {
    *       <li>Must be in the sending Game.
    *     </ul>
    */
+  @ApiResponse(responseCode = "204", description = "Closed the sending game.")
   @ApiResponse(responseCode = "404", description = "Game not found.")
   @ApiResponse(responseCode = "409", description = "Game is not in in awaiting stage.")
   @ApiResponse(responseCode = "404", description = "Requesting player is not found.")

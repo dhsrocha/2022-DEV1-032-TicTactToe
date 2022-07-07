@@ -1,5 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -83,7 +84,7 @@ final class TurnEndpointTest {
             + "THEN return status 404.")
     void givenRandomId_whenRetrieve_thenReturnStatus404_TURN_NOT_FOUND() throws Exception {
       // Arrange
-      final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+      final var req = get(BASE + '{' + Turn.ID + '}', UUID.randomUUID());
       // Act
       final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
       // Assert
@@ -133,9 +134,10 @@ final class TurnEndpointTest {
     @Test
     @DisplayName(
         "GIVEN in progress game " //
-            + "AND away winning bitboard "
+            + "AND away bitboard as winning one "
             + "WHEN creating a turn "
-            + "THEN return away as winner for game.")
+            + "THEN return status HTTP 204 "
+            + "AND away as winner for the sending game.")
     void givenInProgressGame_andHomeWinningBitboard_whenCreate_thenReturnHomeAsWinnerForGame()
         throws Exception {
       // Arrange
@@ -146,7 +148,7 @@ final class TurnEndpointTest {
       joinIn(game, joiner).andExpect(status().isNoContent());
       // Act
       notOverTurnFor(game, opener).andExpect(status().isCreated());
-      turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
+      turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isNoContent());
       retrieve(res)
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.winner.id", is(joiner.toString())));
@@ -243,31 +245,38 @@ final class TurnEndpointTest {
     @Test
     @DisplayName(
         "GIVEN two games in progress with turns "
-            + "WHEN create winning turn "
-            + "THEN all corresponding turns are removed.")
-    void given2GamesWithTurns_whenCreateWinningTurn_thenAllTurnsRemoved() throws Exception {
+            + "WHEN create winning turn for one of them "
+            + "THEN return HTTP status 204 for it "
+            + "AND all corresponding turns are removed."
+            + "AND the unrelated ones are preserved")
+    void given2GamesWithTurns_whenCreateWinTurn_thenReturn204_andRelatedRemoved_andUnrelatedAreNot()
+        throws Exception {
       // Arrange
-      final var opener = player().getExternalId();
-      final var joiner = player().getExternalId();
-      final var game = idFrom(gameFor(opener));
-      joinIn(game, joiner).andExpect(status().isNoContent());
-      final var toDelete = notOverTurnFor(game, joiner).andExpect(status().isCreated());
+      final var opener1 = player().getExternalId();
+      final var joiner1 = player().getExternalId();
+      final var game1 = idFrom(gameFor(opener1));
+      joinIn(game1, joiner1).andExpect(status().isNoContent());
+      notOverTurnFor(game1, joiner1);
 
       final var opener2 = player().getExternalId();
       final var joiner2 = player().getExternalId();
       final var game2 = idFrom(gameFor(opener2));
       joinIn(game2, joiner2).andExpect(status().isNoContent());
-      notOverTurnFor(game2, opener2).andExpect(status().isCreated());
-      notOverTurnFor(game2, joiner2).andExpect(status().isCreated());
-      final var toPreserve = notOverTurnFor(game2, opener2).andExpect(status().isCreated());
+      final var toPreserve1 = notOverTurnFor(game2, opener2).andExpect(status().isCreated());
+      final var toPreserve2 = notOverTurnFor(game2, joiner2).andExpect(status().isCreated());
+      final var toPreserve3 = notOverTurnFor(game2, opener2).andExpect(status().isCreated());
       // Act
-      final var turnOver =
-          turnFor(game, opener, 0b0_100_010_001__000_100_100).andExpect(status().isCreated());
+      turnFor(game1, opener1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
       // Assert
-      retrieve(toPreserve).andExpect(status().isOk());
-      retrieve(toDelete).andExpect(status().isNotFound());
-      retrieve(turnOver).andExpect(status().isNotFound());
-      mvc.perform(get(BASE)).andExpect(jsonPath("$.totalElements", is(3)));
+      retrieve(toPreserve3).andExpect(status().isOk());
+      final var hasItems =
+          hasItems(
+              idFrom(toPreserve1).toString(),
+              idFrom(toPreserve2).toString(),
+              idFrom(toPreserve3).toString());
+      mvc.perform(get(BASE))
+          .andExpect(jsonPath("$.totalElements", is(3)))
+          .andExpect(jsonPath("$.content..id", hasItems));
     }
   }
 
