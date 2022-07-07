@@ -25,11 +25,31 @@ import lombok.Setter;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Embeddable
+@Schema(
+    description = "Representation of board's state of a Game in the moment an Turn is occurred.")
 @Data
 @Setter(AccessLevel.NONE)
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Bitboard implements Serializable, Comparable<Bitboard> {
+
+  /**
+   * Processes {@link Bitboard}'s containing state.
+   *
+   * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
+   * @see Bitboard
+   */
+  public interface Processor {
+
+    /**
+     * Calculates the end conditions, if any, from the provided bitboard's state, according to a
+     * {@link Game}'s set of rules.
+     *
+     * @param state A {@link Game}'s board in bitboard notation.
+     * @return A outgoing result of the state.
+     */
+    Result process(@NonNull final Bitboard state);
+  }
 
   /** Comparison criteria. */
   private static final Comparator<Bitboard> COMPARATOR = Comparator.comparing(Bitboard::getState);

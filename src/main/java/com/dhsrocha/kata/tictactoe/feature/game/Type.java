@@ -2,11 +2,13 @@ package com.dhsrocha.kata.tictactoe.feature.game;
 
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard.Processor;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard.Result;
 import java.util.BitSet;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Game type, holds a game's rule set to process a game in given state.
@@ -15,20 +17,20 @@ import lombok.Getter;
  */
 @Getter(AccessLevel.PRIVATE)
 @AllArgsConstructor
-enum Type {
+enum Type implements Processor {
   TIC_TAC_TOE(2, 9) {
     @Override
-    Bitboard.Result process(final long bitboard) {
+    public Bitboard.Result process(@NonNull final Bitboard bitboard) {
       super.validate(bitboard);
-      final var rounds = Long.bitCount(bitboard);
+      final var rounds = Long.bitCount(bitboard.getState());
       if (rounds < 5) {
         return Bitboard.Result.NOT_OVER;
       }
       for (final var win : WIN_STATES) {
-        if (win == (win & (bitboard >> TIC_TAC_TOE.getTiles()))) {
+        if (win == (win & (bitboard.getState() >> TIC_TAC_TOE.getTiles()))) {
           return Result.HOME;
         }
-        if (win == (win & (bitboard & (1L << TIC_TAC_TOE.getTiles()) - 1))) {
+        if (win == (win & (bitboard.getState() & (1L << TIC_TAC_TOE.getTiles()) - 1))) {
           return Result.AWAY;
         }
       }
@@ -54,17 +56,10 @@ enum Type {
   /** Measures the board's size in tiles. */
   private final int tiles;
 
-  /**
-   * Calculates if an bitboard has a winning state, according to the provide rule set.
-   *
-   * @param bitboard The boards' state in bitboard notation.
-   * @return A outgoing result of the state.
-   */
-  abstract Bitboard.Result process(final long bitboard);
-
-  private void validate(final long bitboard) {
-    ExceptionCode.BITBOARD_UNSET_STATE.unless(bitboard != 0);
-    final var set = BitSet.valueOf(new long[] {bitboard});
+  private void validate(final Bitboard bitboard) {
+    final var state = bitboard.getState();
+    ExceptionCode.BITBOARD_UNSET_STATE.unless(state != 0);
+    final var set = BitSet.valueOf(new long[] {state});
     ExceptionCode.BITBOARD_EXCESSIVE_BITS.unless(set.cardinality() <= tiles);
     final var home = set.get(0, getTiles());
     final var away = set.get(getTiles(), getTiles() * getStates());

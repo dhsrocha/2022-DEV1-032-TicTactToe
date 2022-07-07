@@ -41,6 +41,7 @@ public abstract class GameService {
    *     </ul>
    *
    * @param bitboard Bitboard sent from some action.
+   * @return Indicates if the instance's result corresponds to a {@link Game}'s end.
    */
   public abstract boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
 

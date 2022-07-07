@@ -30,7 +30,7 @@ final class TicTacToeTest implements RandomStubExtension {
           + "THEN return expected result accordingly.")
   void expectedResult(final int bitboard, final Bitboard.Result expected) {
     // Act
-    final var actual = Type.TIC_TAC_TOE.process(bitboard);
+    final var actual = Type.TIC_TAC_TOE.process(Bitboard.of(bitboard));
     // Assert
     assertEquals(expected, actual);
   }
@@ -45,7 +45,8 @@ final class TicTacToeTest implements RandomStubExtension {
     // Act
     final var ex =
         Assertions.assertThrows(
-            HttpClientErrorException.class, () -> Type.TIC_TAC_TOE.process(invalidStub));
+            HttpClientErrorException.class,
+            () -> Type.TIC_TAC_TOE.process(Bitboard.of(invalidStub)));
     // Assert
     assertEquals(HttpStatus.BAD_REQUEST.value() + " " + code.name(), ex.getMessage());
   }

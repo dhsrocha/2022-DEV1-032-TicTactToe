@@ -120,12 +120,12 @@ public class Game extends Domain implements Comparable<Game> {
   /**
    * Process results of a {@link Bitboard}, according to provided {@link Type}.
    *
-   * @param bitboard Bitboard holding a state.
-   * @return IF the game came to a finishing result.
+<   * @param bitboard Bitboard holding a state.
+   * @return Indicates if the instance's result corresponds to its end.
    */
   final @NonNull boolean resultFrom(@NonNull final Bitboard bitboard) {
     ExceptionCode.GAME_NOT_IN_PROGRESS.unless(stage == Stage.IN_PROGRESS);
-    final var result = type.process(bitboard.getState());
+    final var result = type.process(bitboard);
     if (null != away && result.isFinished()) {
       finish(Bitboard.Result.HOME == result ? home : away);
     }
