@@ -109,7 +109,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @Schema(hidden = true)
   @JsonIgnore
   @Override
-  public final Long getId() {
+  public Long getId() {
     return super.getId();
   }
 

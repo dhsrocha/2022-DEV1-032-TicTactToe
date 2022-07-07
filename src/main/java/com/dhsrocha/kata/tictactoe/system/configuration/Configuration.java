@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.system;
+package com.dhsrocha.kata.tictactoe.system.configuration;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;

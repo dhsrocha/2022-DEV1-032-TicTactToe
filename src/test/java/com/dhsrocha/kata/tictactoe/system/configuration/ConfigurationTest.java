@@ -1,4 +1,4 @@
-package com.dhsrocha.kata.tictactoe.system;
+package com.dhsrocha.kata.tictactoe.system.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
