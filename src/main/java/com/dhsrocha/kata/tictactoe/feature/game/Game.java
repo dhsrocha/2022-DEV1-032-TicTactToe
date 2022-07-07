@@ -110,8 +110,8 @@ public class Game extends Domain implements Comparable<Game> {
    * @return The invoking instance.
    */
   public final @NonNull Game finish(@NonNull final Player lastRound, final boolean surrendered) {
-    ExceptionCode.GAME_NOT_IN_PROGRESS.unless(null != away && Stage.IN_PROGRESS == stage);
-    ExceptionCode.PLAYER_NOT_IN_GAME.unless(home == lastRound || away == lastRound);
+    ExceptionCode.GAME_NOT_IN_PROGRESS.unless(Stage.IN_PROGRESS == stage);
+    ExceptionCode.PLAYER_NOT_IN_GAME.unless(home == lastRound || null != away && away == lastRound);
     setWinner(surrendered ^ home == lastRound ? home : away == lastRound ? away : home);
     setStage(Stage.FINISHED);
     return this;
@@ -121,9 +121,9 @@ public class Game extends Domain implements Comparable<Game> {
    * Process results of a {@link Bitboard}, according to provided {@link Type}.
    *
    * @param bitboard Bitboard holding a state.
-   * @return Processed result.
+   * @return IF the game came to a finishing result.
    */
-  final @NonNull Game resultFrom(@NonNull final Bitboard bitboard) {
+  final @NonNull boolean resultFrom(@NonNull final Bitboard bitboard) {
     ExceptionCode.GAME_NOT_IN_PROGRESS.unless(stage == Stage.IN_PROGRESS);
     final var result = type.process(bitboard.getState());
     if (null != away && result.isFinished()) {
@@ -132,7 +132,7 @@ public class Game extends Domain implements Comparable<Game> {
     if (null != away && Bitboard.Result.NOT_OVER != result) {
       setStage(Game.Stage.FINISHED);
     }
-    return this;
+    return result.isFinished();
   }
 
   /**

@@ -172,7 +172,8 @@ public abstract class GameService {
 
     @Override
     public void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
-      repository.save(game.resultFrom(bitboard));
+      game.resultFrom(bitboard);
+      repository.save(game);
     }
 
     @Override
