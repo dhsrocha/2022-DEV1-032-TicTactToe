@@ -4,9 +4,11 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.AWAITS;
 import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
+import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -40,7 +42,7 @@ public abstract class GameService {
    *
    * @param bitboard Bitboard sent from some action.
    */
-  public abstract void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
+  public abstract boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
 
   /**
    * Retrieves a {@link Game} resource, based on its external id.
@@ -135,13 +137,14 @@ public abstract class GameService {
   @AllArgsConstructor
   private static class Impl extends GameService {
 
-    private final GameRepository repository;
     private final PlayerService playerService;
+    private final BaseRepository<Game> gameRepository;
+    private final BaseRepository<Turn> turnRepository;
 
     @Override
     public @NonNull Page<Game> find(
         @NonNull final Search criteria, @NonNull final Pageable pageable) {
-      return repository.findAll(
+      return gameRepository.findAll(
           (r, cq, cb) ->
               cb.or(
                   cb.conjunction(),
@@ -155,7 +158,7 @@ public abstract class GameService {
 
     @Override
     public @NonNull Optional<Game> find(@NonNull final UUID id) {
-      return repository.findOne((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id));
+      return gameRepository.findOne((r, cq, cb) -> cb.equal(r.get(Domain.EXTERNAL_ID), id));
     }
 
     @Override
@@ -164,16 +167,17 @@ public abstract class GameService {
       final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
 
       ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(
-          repository.findAll(isInOngoingGame(player)).isEmpty());
+          gameRepository.findAll(openGamesHaving(player)).isEmpty());
 
       final var toCreate = Game.builder().type(type).stage(AWAITS).home(player);
-      return repository.save(toCreate.build()).getExternalId();
+      return gameRepository.save(toCreate.build()).getExternalId();
     }
 
     @Override
-    public void calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
-      game.resultFrom(bitboard);
-      repository.save(game);
+    public boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
+      final var result = game.resultFrom(bitboard);
+      gameRepository.save(game);
+      return result;
     }
 
     @Override
@@ -186,11 +190,11 @@ public abstract class GameService {
       ExceptionCode.PLAYER_ALREADY_IN_GAME.unless(game.getHome() != player);
 
       ExceptionCode.PLAYER_IN_AN_ONGOING_GAME.unless(
-          repository.findAll(isInOngoingGame(player)).isEmpty());
+          gameRepository.findAll(openGamesHaving(player)).isEmpty());
 
       game.setAway(player);
       game.setStage(game.getStage().getNext());
-      repository.save(game);
+      gameRepository.save(game);
     }
 
     @Override
@@ -202,7 +206,8 @@ public abstract class GameService {
       final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
 
-      repository.save(game.finish(player, Boolean.TRUE));
+      gameRepository.save(game.finish(player, Boolean.TRUE));
+      turnRepository.deleteAll(turnRepository.findAll(turnsFrom(game)).stream().toList());
     }
 
     @Override
@@ -214,16 +219,20 @@ public abstract class GameService {
       final var player = opt.orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player);
 
-      repository.delete(game);
+      gameRepository.delete(game);
     }
 
-    private static Specification<Game> isInOngoingGame(@NonNull final Player player) {
+    private static Specification<Game> openGamesHaving(@NonNull final Player player) {
       return (r, cq, cb) ->
           cb.and(
               cb.or(cb.equal(r.get(Search.HOME), player), cb.equal(r.get(Search.AWAY), player)),
               cb.or(
                   cb.equal(r.get(Search.STAGE), AWAITS),
                   cb.equal(r.get(Search.STAGE), IN_PROGRESS)));
+    }
+
+    private static Specification<Turn> turnsFrom(@NonNull final Game game) {
+      return (r, cq, cb) -> cb.equal(r.get(Search.GAME), game);
     }
   }
 
@@ -238,6 +247,7 @@ public abstract class GameService {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Search {
 
+    private static final String GAME = "game";
     private static final String TYPE = "type";
     private static final String STAGE = "stage";
     private static final String HOME = "home";

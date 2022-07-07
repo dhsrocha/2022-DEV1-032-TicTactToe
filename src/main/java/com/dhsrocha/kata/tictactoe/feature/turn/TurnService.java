@@ -122,16 +122,18 @@ public abstract class TurnService {
       PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
 
       final var lastRound =
-          repository.findAll(specWith(game), Pageable.ofSize(1)).getContent().stream().findFirst();
+          repository.findAll(turnsFrom(game), Pageable.ofSize(1)).getContent().stream().findFirst();
       TURN_LAST_SAME_PLAYER.unless(lastRound.filter(t -> t.getPlayer() == player).isEmpty());
 
       final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
       final var created = repository.save(toCreate).getExternalId();
-      gameService.calculate(game, bitboard);
+      if (gameService.calculate(game, bitboard)) {
+        repository.deleteAll(repository.findAll(turnsFrom(game)).stream().toList());
+      }
       return created;
     }
 
-    private static Specification<Turn> specWith(@NonNull final Game game) {
+    private static Specification<Turn> turnsFrom(@NonNull final Game game) {
       return (r, cq, cb) -> {
         cq.orderBy(cb.desc(r.get(Domain.CREATED_AT)));
         return cb.equal(r.get(Search.GAME), game);

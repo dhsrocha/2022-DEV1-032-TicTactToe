@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
+import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -52,6 +53,7 @@ import org.springframework.test.web.servlet.ResultActions;
 final class GameEndpointTest {
 
   private static final String BASE = "/" + Game.TAG;
+  private static final String URI_TURN = "/" + Turn.TAG;
 
   @Autowired MockMvc mvc;
   @Autowired BaseRepository<Player> playerRepository;
@@ -268,6 +270,30 @@ final class GameEndpointTest {
     @Test
     @DisplayName(
         "GIVEN game with in progress state "
+            + "AND some turns created "
+            + "WHEN surrendering this game "
+            + "THEN return finished game "
+            + "AND winner is the opponent.")
+    void givenInProgressGame_andSomeTurns_whenSurrender_thenReturnFinishedGame_andNoRelatedTurns()
+        throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var res = openFor(opener);
+      final var game = idFrom(res);
+      joinOrSurrender(idFrom(res), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      turnFor(game, opener);
+      turnFor(game, joiner);
+      // Act
+      joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
+          .andExpect(status().isNoContent());
+      // Assert
+      mvc.perform(get(URI_TURN)).andExpect(jsonPath("$.totalElements", is(0)));
+    }
+
+    @Test
+    @DisplayName(
+        "GIVEN game with in progress state "
             + "WHEN surrendering this game "
             + "THEN return exception with code GAME_NOT_FOUND.")
     void givenInProgressGame_whenSurrender_withRandomGameId_thenReturnStatus409_GAME_NOT_FOUND()
@@ -449,6 +475,15 @@ final class GameEndpointTest {
         put(BASE + "/" + uri, game)
             .param("type", Type.TIC_TAC_TOE.name())
             .param("requesterId", requester.toString()));
+  }
+
+  private void turnFor(@NonNull final UUID game, @NonNull final UUID player) throws Exception {
+    final var req = post(BASE);
+    mvc.perform(
+        req.queryParam("type", "TIC_TAC_TOE")
+            .queryParam("gameId", game.toString())
+            .queryParam("requesterId", player.toString())
+            .queryParam("bitboard", String.valueOf(0b0_100_000_000__000_000_000)));
   }
 
   private ResultActions retrieve(@NonNull final ResultActions res) throws Exception {

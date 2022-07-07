@@ -109,6 +109,7 @@ final class TurnEndpointTest {
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.totalElements", is(2)));
       retrieve(resOpener)
+          .andExpect(status().isOk())
           .andExpect(jsonPath("$.game.id", is(game.toString())))
           .andExpect(jsonPath("$.player.id", is(opener.toString())))
           .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
@@ -116,6 +117,7 @@ final class TurnEndpointTest {
           .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
           .andExpect(jsonPath("$.updatedAt", is(nullValue())));
       retrieve(resJoiner)
+          .andExpect(status().isOk())
           .andExpect(jsonPath("$.game.id", is(game.toString())))
           .andExpect(jsonPath("$.player.id", is(joiner.toString())))
           .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
@@ -145,7 +147,9 @@ final class TurnEndpointTest {
       // Act
       notOverTurnFor(game, opener).andExpect(status().isCreated());
       turnFor(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isCreated());
-      retrieve(res).andExpect(jsonPath("$.winner.id", is(joiner.toString())));
+      retrieve(res)
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.winner.id", is(joiner.toString())));
     }
 
     @Test
@@ -235,6 +239,36 @@ final class TurnEndpointTest {
       notOverTurnFor(game, opener).andExpect(status().isConflict());
       notOverTurnFor(game, joiner).andExpect(status().isCreated());
     }
+
+    @Test
+    @DisplayName(
+        "GIVEN two games in progress with turns "
+            + "WHEN create winning turn "
+            + "THEN all corresponding turns are removed.")
+    void given2GamesWithTurns_whenCreateWinningTurn_thenAllTurnsRemoved() throws Exception {
+      // Arrange
+      final var opener = player().getExternalId();
+      final var joiner = player().getExternalId();
+      final var game = idFrom(gameFor(opener));
+      joinIn(game, joiner).andExpect(status().isNoContent());
+      final var toDelete = notOverTurnFor(game, joiner).andExpect(status().isCreated());
+
+      final var opener2 = player().getExternalId();
+      final var joiner2 = player().getExternalId();
+      final var game2 = idFrom(gameFor(opener2));
+      joinIn(game2, joiner2).andExpect(status().isNoContent());
+      notOverTurnFor(game2, opener2).andExpect(status().isCreated());
+      notOverTurnFor(game2, joiner2).andExpect(status().isCreated());
+      final var toPreserve = notOverTurnFor(game2, opener2).andExpect(status().isCreated());
+      // Act
+      final var turnOver =
+          turnFor(game, opener, 0b0_100_010_001__000_100_100).andExpect(status().isCreated());
+      // Assert
+      retrieve(toPreserve).andExpect(status().isOk());
+      retrieve(toDelete).andExpect(status().isNotFound());
+      retrieve(turnOver).andExpect(status().isNotFound());
+      mvc.perform(get(BASE)).andExpect(jsonPath("$.totalElements", is(3)));
+    }
   }
 
   private Player player() {
@@ -249,7 +283,7 @@ final class TurnEndpointTest {
 
   private ResultActions notOverTurnFor(@NonNull final UUID game, @NonNull final UUID player)
       throws Exception {
-    return turnFor(game, player, 0b0_100_000_00__000_000_00);
+    return turnFor(game, player, 0b0_100_000_000__000_000_000);
   }
 
   private ResultActions turnFor(
@@ -272,7 +306,7 @@ final class TurnEndpointTest {
 
   private ResultActions retrieve(@NonNull final ResultActions res) throws Exception {
     final var location = res.andReturn().getResponse().getHeader(HttpHeaders.LOCATION);
-    return mvc.perform(get(Objects.requireNonNull(location))).andExpect(status().isOk());
+    return mvc.perform(get(Objects.requireNonNull(location)));
   }
 
   private UUID idFrom(@NonNull final ResultActions res) {
