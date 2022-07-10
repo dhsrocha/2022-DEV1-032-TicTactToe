@@ -1,5 +1,8 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import com.dhsrocha.kata.tictactoe.base.BaseController;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
@@ -11,8 +14,10 @@ import java.net.URL;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,21 +42,23 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @AllArgsConstructor
 class TurnController implements BaseController {
 
+  private final PagedResourcesAssembler<Turn> assembler;
   private final TurnService service;
 
   /**
    * Retrieves a page of Action resources, based on search criteria.
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
-   * @param pg Pagination set of parameters.
+   * @param pageable Pagination set of parameters.
    * @return Paginated set of resources, with additional information about it.
    */
   @ApiResponse(responseCode = "200", description = "Turn page is retrieved.")
   @GetMapping
-  Page<Turn> find(
-      @ParameterObject final TurnService.Search criteria, //
-      @ParameterObject final Pageable pg) {
-    return service.find(criteria, pg);
+  ResponseEntity<PagedModel<EntityModel<Turn>>> find(
+      @ParameterObject final TurnService.Search criteria,
+      @ParameterObject final Pageable pageable) {
+    final var self = linkTo(TurnController.class).withSelfRel();
+    return ResponseEntity.ok(assembler.toModel(service.find(criteria, pageable), self));
   }
 
   /**
@@ -63,8 +70,10 @@ class TurnController implements BaseController {
   @ApiResponse(responseCode = "200", description = "Turn is found.")
   @ApiResponse(responseCode = "404", description = "Turn not found.")
   @GetMapping('{' + Turn.ID + '}')
-  Turn find(@PathVariable(Turn.ID) final UUID turnId) {
-    return service.find(turnId).orElseThrow(ExceptionCode.TURN_NOT_FOUND);
+  ResponseEntity<EntityModel<Turn>> find(@PathVariable(Turn.ID) final UUID turnId) {
+    final var found = service.find(turnId).orElseThrow(ExceptionCode.TURN_NOT_FOUND);
+    final var self = linkTo(methodOn(TurnController.class).find(turnId)).withSelfRel();
+    return ResponseEntity.ok(EntityModel.of(found, self));
   }
 
   /**

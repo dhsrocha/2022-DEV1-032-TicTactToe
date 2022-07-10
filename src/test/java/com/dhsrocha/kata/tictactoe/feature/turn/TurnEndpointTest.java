@@ -1,7 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
 import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -71,10 +70,11 @@ final class TurnEndpointTest {
       mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
-          .andExpect(jsonPath("$.number", is(0)))
-          .andExpect(jsonPath("$.size", is(20)))
-          .andExpect(jsonPath("$.totalElements", is(0)))
-          .andExpect(jsonPath("$.content", hasSize(0)));
+          .andExpect(jsonPath("$.page.size", is(20)))
+          .andExpect(jsonPath("$.page.number", is(0)))
+          .andExpect(jsonPath("$.page.totalElements", is(0)))
+          .andExpect(jsonPath("$.page.totalPages", is(0)))
+          .andExpect(jsonPath("$._embedded").doesNotExist());
     }
 
     @Test
@@ -108,9 +108,10 @@ final class TurnEndpointTest {
       mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
-          .andExpect(jsonPath("$.totalElements", is(2)));
+          .andExpect(jsonPath("$.page.totalElements", is(2)));
       retrieve(resOpener)
           .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.game.id", is(game.toString())))
           .andExpect(jsonPath("$.player.id", is(opener.toString())))
           .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
@@ -119,6 +120,7 @@ final class TurnEndpointTest {
           .andExpect(jsonPath("$.updatedAt", is(nullValue())));
       retrieve(resJoiner)
           .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.game.id", is(game.toString())))
           .andExpect(jsonPath("$.player.id", is(joiner.toString())))
           .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
@@ -268,14 +270,16 @@ final class TurnEndpointTest {
       // Act
       turnFor(game1, opener1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
       // Assert
-      retrieve(toPreserve3).andExpect(status().isOk());
+      retrieve(toPreserve3)
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON));
       final var hasItems =
           hasItems(
               idFrom(toPreserve1).toString(),
               idFrom(toPreserve2).toString(),
               idFrom(toPreserve3).toString());
       mvc.perform(get(BASE))
-          .andExpect(jsonPath("$.totalElements", is(3)))
+          .andExpect(jsonPath("$.page.totalElements", is(3)))
           .andExpect(jsonPath("$.content..id", hasItems));
     }
   }

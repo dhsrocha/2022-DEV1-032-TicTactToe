@@ -3,7 +3,6 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import static java.time.OffsetDateTime.now;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
@@ -131,10 +130,10 @@ final class PlayerEndpointTest {
     mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.number", is(0)))
-        .andExpect(jsonPath("$.size", is(20)))
-        .andExpect(jsonPath("$.totalElements", is(0)))
-        .andExpect(jsonPath("$.content", hasSize(0)));
+        .andExpect(jsonPath("$.page.number", is(0)))
+        .andExpect(jsonPath("$.page.size", is(20)))
+        .andExpect(jsonPath("$.page.totalElements", is(0)))
+        .andExpect(jsonPath("$._embedded").doesNotExist());
   }
 
   @Test
@@ -157,9 +156,9 @@ final class PlayerEndpointTest {
     final var usernames = set.stream().map(Player::getUsername).toArray();
     res.andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.number", is(0)))
-        .andExpect(jsonPath("$.size", is(20)))
-        .andExpect(jsonPath("$.totalElements", is(3)))
+        .andExpect(jsonPath("$.page.number", is(0)))
+        .andExpect(jsonPath("$.page.size", is(20)))
+        .andExpect(jsonPath("$.page.totalElements", is(3)))
         .andExpect(jsonPath("$.content..id", hasItems(ids)))
         .andExpect(jsonPath("$.content..username", hasItems(usernames)))
         .andExpect(jsonPath("$.content..active", everyItem(is(Boolean.TRUE))))
@@ -203,7 +202,7 @@ final class PlayerEndpointTest {
     mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.totalElements", is(1)));
+        .andExpect(jsonPath("$.page.totalElements", is(1)));
     mvc.perform(get(location).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))

@@ -120,7 +120,8 @@ public class Game extends Domain implements Comparable<Game> {
   /**
    * Process results of a {@link Bitboard}, according to provided {@link Type}.
    *
-<   * @param bitboard Bitboard holding a state.
+   * <p>< * @param bitboard Bitboard holding a state.
+   *
    * @return Indicates if the instance's result corresponds to its end.
    */
   final @NonNull boolean resultFrom(@NonNull final Bitboard bitboard) {

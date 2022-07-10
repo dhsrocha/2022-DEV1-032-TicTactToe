@@ -1,6 +1,5 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -71,10 +70,11 @@ final class GameEndpointTest {
       mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
-          .andExpect(jsonPath("$.number", is(0)))
-          .andExpect(jsonPath("$.size", is(20)))
-          .andExpect(jsonPath("$.totalElements", is(0)))
-          .andExpect(jsonPath("$.content", hasSize(0)));
+          .andExpect(jsonPath("$.page.size", is(20)))
+          .andExpect(jsonPath("$.page.number", is(0)))
+          .andExpect(jsonPath("$.page.totalElements", is(0)))
+          .andExpect(jsonPath("$.page.totalPages", is(0)))
+          .andExpect(jsonPath("$._embedded").doesNotExist());
     }
 
     @Test
@@ -108,11 +108,11 @@ final class GameEndpointTest {
       mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
-          .andExpect(jsonPath("$.totalElements", is(1)));
+          .andExpect(jsonPath("$.page.totalElements", is(1)));
       retrieve(res)
-          .andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())))
           .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
           .andExpect(jsonPath("$.externalId").doesNotExist())
           .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
@@ -160,7 +160,10 @@ final class GameEndpointTest {
       joinOrSurrender(game, joiner.getExternalId(), GameController.JOIN)
           .andExpect(status().isNoContent());
       // Assert
-      retrieve(res).andExpect(jsonPath("$.stage", is(Game.Stage.IN_PROGRESS.name())));
+      retrieve(res)
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.stage", is(Game.Stage.IN_PROGRESS.name())));
     }
 
     @Test
@@ -264,7 +267,10 @@ final class GameEndpointTest {
       joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
           .andExpect(status().isNoContent());
       // Assert
-      retrieve(res).andExpect(jsonPath("$.winner.id", is(opener.toString())));
+      retrieve(res)
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.winner.id", is(opener.toString())));
     }
 
     @Test
@@ -288,7 +294,7 @@ final class GameEndpointTest {
       joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
           .andExpect(status().isNoContent());
       // Assert
-      mvc.perform(get(URI_TURN)).andExpect(jsonPath("$.totalElements", is(0)));
+      mvc.perform(get(URI_TURN)).andExpect(jsonPath("$.page.totalElements", is(0)));
     }
 
     @Test
@@ -381,7 +387,9 @@ final class GameEndpointTest {
       final var closed = close(idFrom(game), opener);
       // Assert
       closed.andExpect(status().isNoContent());
-      retrieve(game).andExpect(status().isNotFound());
+      retrieve(game)
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(status().isNotFound());
     }
 
     @Test
