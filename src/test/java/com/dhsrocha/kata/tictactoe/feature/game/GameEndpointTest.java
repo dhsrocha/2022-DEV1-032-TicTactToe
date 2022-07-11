@@ -4,10 +4,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,11 +13,9 @@ import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
-import java.net.URI;
+import com.dhsrocha.kata.tictactoe.helper.BaseEndpointTest;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 import java.util.UUID;
-import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -28,10 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * Test suite for features related to {@link Game} domain.
@@ -49,16 +41,15 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-final class GameEndpointTest {
+final class GameEndpointTest extends BaseEndpointTest {
 
-  private static final String BASE = "/" + Game.TAG;
+  private static final String URI_GAME = '/' + Game.TAG;
   private static final String URI_TURN = "/" + Turn.TAG;
 
-  @Autowired MockMvc mvc;
   @Autowired BaseRepository<Player> playerRepository;
 
   @Nested
-  @DisplayName("GET '" + BASE + "'")
+  @DisplayName("GET '" + URI_GAME + "'")
   class Retrieve {
     @Test
     @DisplayName(
@@ -67,7 +58,7 @@ final class GameEndpointTest {
             + "THEN return an empty list.")
     void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
       // Act / Assert
-      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(get(URI_GAME).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.size", is(20)))
@@ -84,7 +75,7 @@ final class GameEndpointTest {
             + "THEN return status 404.")
     void givenRandomId_whenRetrieve_thenReturnStatus404_GAME_NOT_FOUND() throws Exception {
       // Arrange
-      final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+      final var req = get(URI_GAME + '{' + Player.ID + '}', UUID.randomUUID());
       // Act
       final var res = mvc.perform(req.contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
       // Assert
@@ -93,7 +84,7 @@ final class GameEndpointTest {
   }
 
   @Nested
-  @DisplayName("POST '" + BASE + '/' + Game.TAG + "'")
+  @DisplayName("POST '" + URI_GAME + "'")
   class Open {
     @Test
     @DisplayName(
@@ -103,13 +94,13 @@ final class GameEndpointTest {
             + "AND stage is awaits.")
     void givenCreatedPlayer_whenOpen_thenReturnGameIsCreated_andStageIsAwaits() throws Exception {
       // Act
-      final var res = openFor(player().getExternalId()).andExpect(status().isCreated());
+      final var res = game(player().getExternalId()).andExpect(status().isCreated());
       // Assert
-      mvc.perform(get(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+      mvc.perform(get(URI_GAME).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.page.totalElements", is(1)));
-      retrieve(res)
+      findOne(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.stage", is(Game.Stage.AWAITS.name())))
@@ -125,7 +116,7 @@ final class GameEndpointTest {
             + "THEN return exception with code PLAYER_NOT_FOUND.")
     void whenOpen_thenReturn404_PLAYER_NOT_FOUND() throws Exception {
       // Act - Assert
-      openFor(UUID.randomUUID()).andExpect(status().isNotFound());
+      game(UUID.randomUUID()).andExpect(status().isNotFound());
     }
 
     @Test
@@ -136,14 +127,14 @@ final class GameEndpointTest {
     void givenOpenedGame_whenOpenAgain_thenReturn409_PLAYER_ALREADY_IN_GAME() throws Exception {
       // Arrange
       final var created = player().getExternalId();
-      openFor(created).andExpect(status().isCreated());
+      game(created).andExpect(status().isCreated());
       // Act - Assert
-      openFor(created).andExpect(status().isConflict());
+      game(created).andExpect(status().isConflict());
     }
   }
 
   @Nested
-  @DisplayName("PUT '" + BASE + '/' + GameController.JOIN + "'")
+  @DisplayName("PUT '" + URI_GAME + '/' + GameController.JOIN + "'")
   class Join {
     @Test
     @DisplayName(
@@ -153,14 +144,13 @@ final class GameEndpointTest {
     void given2Players_whenJoin_requesterIsJoinedToGame() throws Exception {
       // Arrange
       final var opener = player();
-      final var res = openFor(opener.getExternalId()).andExpect(status().isCreated());
+      final var res = game(opener.getExternalId()).andExpect(status().isCreated());
       final var game = idFrom(res);
       // Act
       final var joiner = player();
-      joinOrSurrender(game, joiner.getExternalId(), GameController.JOIN)
-          .andExpect(status().isNoContent());
+      join(game, joiner.getExternalId()).andExpect(status().isNoContent());
       // Assert
-      retrieve(res)
+      findOne(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.stage", is(Game.Stage.IN_PROGRESS.name())));
@@ -174,10 +164,9 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      openFor(opener);
+      game(opener);
       // Act - Assert
-      joinOrSurrender(UUID.randomUUID(), joiner, GameController.JOIN)
-          .andExpect(status().isNotFound());
+      join(UUID.randomUUID(), joiner).andExpect(status().isNotFound());
     }
 
     @Test
@@ -187,12 +176,10 @@ final class GameEndpointTest {
             + "THEN return exception with code GAME_NOT_IN_AWAITS.")
     void givenOpenedGame_whenJoin_thenReturn409_GAME_NOT_IN_AWAITS() throws Exception {
       // Arrange
-      final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
-      joinOrSurrender(game, player().getExternalId(), GameController.JOIN)
-          .andExpect(status().isNoContent());
+      final var game = idFrom(game(player().getExternalId()).andExpect(status().isCreated()));
+      join(game, player().getExternalId()).andExpect(status().isNoContent());
       // Act - Assert
-      joinOrSurrender(game, player().getExternalId(), GameController.JOIN)
-          .andExpect(status().isConflict());
+      join(game, player().getExternalId()).andExpect(status().isConflict());
     }
 
     @Test
@@ -203,10 +190,9 @@ final class GameEndpointTest {
     void givenOpenedGame_whenJoinRandomPlayerId_thenReturnStatus409_PLAYER_NOT_FOUND()
         throws Exception {
       // Arrange
-      final var game = idFrom(openFor(player().getExternalId()).andExpect(status().isCreated()));
+      final var game = idFrom(game(player().getExternalId()).andExpect(status().isCreated()));
       // Act - Assert
-      joinOrSurrender(game, UUID.randomUUID(), GameController.JOIN)
-          .andExpect(status().isNotFound());
+      join(game, UUID.randomUUID()).andExpect(status().isNotFound());
     }
 
     @Test
@@ -220,12 +206,12 @@ final class GameEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var someone = player().getExternalId();
-      final var game = idFrom(openFor(opener).andExpect(status().isCreated()));
-      joinOrSurrender(game, joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var game = idFrom(game(opener).andExpect(status().isCreated()));
+      join(game, joiner).andExpect(status().isNoContent());
       // Act - Assert
-      joinOrSurrender(game, opener, GameController.JOIN).andExpect(status().isConflict());
-      joinOrSurrender(game, joiner, GameController.JOIN).andExpect(status().isConflict());
-      joinOrSurrender(game, someone, GameController.JOIN).andExpect(status().isConflict());
+      join(game, opener).andExpect(status().isConflict());
+      join(game, joiner).andExpect(status().isConflict());
+      join(game, someone).andExpect(status().isConflict());
     }
 
     @Test
@@ -238,17 +224,17 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var res1 = openFor(opener);
-      joinOrSurrender(idFrom(res1), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var game = idFrom(game(opener));
+      join(game, joiner).andExpect(status().isNoContent());
       // Act - Assert
-      final var opener3 = player().getExternalId();
-      final var res2 = openFor(opener3);
-      joinOrSurrender(idFrom(res2), joiner, GameController.JOIN).andExpect(status().isConflict());
+      final var opener2 = player().getExternalId();
+      final var game2 = idFrom(game(opener2));
+      join(game2, joiner).andExpect(status().isConflict());
     }
   }
 
   @Nested
-  @DisplayName("PUT '" + BASE + '/' + GameController.SURRENDER + "'")
+  @DisplayName("PUT '" + URI_GAME + '/' + GameController.SURRENDER + "'")
   class Surrender {
     @Test
     @DisplayName(
@@ -261,13 +247,12 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var res = openFor(opener);
-      joinOrSurrender(idFrom(res), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var res = game(opener);
+      join(idFrom(res), joiner).andExpect(status().isNoContent());
       // Act
-      joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
-          .andExpect(status().isNoContent());
+      surrender(idFrom(res), joiner).andExpect(status().isNoContent());
       // Assert
-      retrieve(res)
+      findOne(res)
           .andExpect(status().isOk())
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(jsonPath("$.winner.id", is(opener.toString())));
@@ -285,14 +270,13 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var res = openFor(opener);
+      final var res = game(opener);
       final var game = idFrom(res);
-      joinOrSurrender(idFrom(res), joiner, GameController.JOIN).andExpect(status().isNoContent());
-      turnFor(game, opener);
-      turnFor(game, joiner);
+      join(game, joiner).andExpect(status().isNoContent());
+      turn(game, opener);
+      turn(game, joiner);
       // Act
-      joinOrSurrender(idFrom(res), joiner, GameController.SURRENDER)
-          .andExpect(status().isNoContent());
+      surrender(game, joiner).andExpect(status().isNoContent());
       // Assert
       mvc.perform(get(URI_TURN)).andExpect(jsonPath("$.page.totalElements", is(0)));
     }
@@ -307,11 +291,10 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var game = openFor(opener);
-      joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var game = idFrom(game(opener));
+      join(game, joiner).andExpect(status().isNoContent());
       // Act - Assert
-      joinOrSurrender(UUID.randomUUID(), joiner, GameController.SURRENDER)
-          .andExpect(status().isNotFound());
+      surrender(UUID.randomUUID(), joiner).andExpect(status().isNotFound());
     }
 
     @Test
@@ -323,9 +306,9 @@ final class GameEndpointTest {
         throws Exception {
       // Arrange
       final var opener = player().getExternalId();
-      final var game = openFor(opener);
+      final var game = idFrom(game(opener));
       // Act
-      final var surrendered = joinOrSurrender(idFrom(game), opener, GameController.SURRENDER);
+      final var surrendered = join(game, opener);
       // Assert
       surrendered.andExpect(status().isConflict());
     }
@@ -340,11 +323,10 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var game = openFor(opener);
-      joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var game = idFrom(game(opener));
+      join(game, joiner).andExpect(status().isNoContent());
       // Act
-      final var surrendered =
-          joinOrSurrender(idFrom(game), UUID.randomUUID(), GameController.SURRENDER);
+      final var surrendered = surrender(game, UUID.randomUUID());
       // Assert
       surrendered.andExpect(status().isNotFound());
     }
@@ -361,17 +343,17 @@ final class GameEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var third = player().getExternalId();
-      final var game = openFor(opener);
-      joinOrSurrender(idFrom(game), joiner, GameController.JOIN).andExpect(status().isNoContent());
+      final var game = idFrom(game(opener));
+      join(game, joiner).andExpect(status().isNoContent());
       // Act
-      final var surrendered = joinOrSurrender(idFrom(game), third, GameController.SURRENDER);
+      final var surrendered = surrender(game, third);
       // Assert
       surrendered.andExpect(status().isConflict());
     }
   }
 
   @Nested
-  @DisplayName("DELETE '" + BASE + "'")
+  @DisplayName("DELETE '" + URI_GAME + '/' + '{' + Game.ID + '}' + "'")
   class Close {
     @Test
     @DisplayName(
@@ -382,12 +364,12 @@ final class GameEndpointTest {
     void givenAwaitingGame_whenClose_thenReturnStatus204_andGameIsNotFound() throws Exception {
       // Arrange
       final var opener = player().getExternalId();
-      final var game = openFor(opener);
+      final var game = game(opener);
       // Act
       final var closed = close(idFrom(game), opener);
       // Assert
       closed.andExpect(status().isNoContent());
-      retrieve(game)
+      findOne(game)
           .andExpect(content().contentType(APPLICATION_JSON))
           .andExpect(status().isNotFound());
     }
@@ -401,7 +383,7 @@ final class GameEndpointTest {
         throws Exception {
       // Arrange
       final var opener = player().getExternalId();
-      openFor(opener);
+      game(opener);
       // Act
       final var closed = close(UUID.randomUUID(), opener);
       // Assert
@@ -417,10 +399,10 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
-      final var game = openFor(opener);
-      joinOrSurrender(idFrom(game), joiner, GameController.JOIN);
+      final var game = idFrom(game(opener));
+      join(game, joiner);
       // Act
-      final var closed = close(idFrom(game), opener);
+      final var closed = close(game, opener);
       // Assert
       closed.andExpect(status().isConflict());
     }
@@ -434,9 +416,9 @@ final class GameEndpointTest {
         throws Exception {
       // Arrange
       final var opener = player().getExternalId();
-      final var game = openFor(opener);
+      final var game = idFrom(game(opener));
       // Act
-      final var closed = close(idFrom(game), UUID.randomUUID());
+      final var closed = close(game, UUID.randomUUID());
       // Assert
       closed.andExpect(status().isNotFound());
     }
@@ -452,9 +434,9 @@ final class GameEndpointTest {
       // Arrange
       final var opener = player().getExternalId();
       final var another = player().getExternalId();
-      final var game = openFor(opener);
+      final var game = idFrom(game(opener));
       // Act
-      final var closed = close(idFrom(game), another);
+      final var closed = close(game, another);
       // Assert
       closed.andExpect(status().isConflict());
     }
@@ -462,46 +444,5 @@ final class GameEndpointTest {
 
   private Player player() {
     return playerRepository.save(PlayerTest.validStub().toBuilder().active(Boolean.TRUE).build());
-  }
-
-  private ResultActions openFor(@NonNull final UUID player) throws Exception {
-    final var type = Type.TIC_TAC_TOE.name();
-    final var req = post(BASE);
-    return mvc.perform(req.queryParam("type", type).queryParam("requesterId", player.toString()));
-  }
-
-  private ResultActions close(@NonNull final UUID game, @NonNull final UUID player)
-      throws Exception {
-    final var req = delete(BASE + '/' + '{' + Game.ID + '}', game);
-    return mvc.perform(req.queryParam("requesterId", player.toString()));
-  }
-
-  private ResultActions joinOrSurrender(
-      @NonNull final UUID game, @NonNull final UUID requester, @NonNull final String uri)
-      throws Exception {
-    return mvc.perform(
-        put(BASE + "/" + uri, game)
-            .param("type", Type.TIC_TAC_TOE.name())
-            .param("requesterId", requester.toString()));
-  }
-
-  private void turnFor(@NonNull final UUID game, @NonNull final UUID player) throws Exception {
-    final var req = post(BASE);
-    mvc.perform(
-        req.queryParam("type", "TIC_TAC_TOE")
-            .queryParam("gameId", game.toString())
-            .queryParam("requesterId", player.toString())
-            .queryParam("bitboard", String.valueOf(0b0_100_000_000__000_000_000)));
-  }
-
-  private ResultActions retrieve(@NonNull final ResultActions res) throws Exception {
-    final var location = res.andReturn().getResponse().getHeader(HttpHeaders.LOCATION);
-    return mvc.perform(get(Objects.requireNonNull(location)));
-  }
-
-  private UUID idFrom(@NonNull final ResultActions res) {
-    final var location = res.andReturn().getResponse().getHeader(HttpHeaders.LOCATION);
-    final var uri = URI.create(Objects.requireNonNull(location));
-    return UUID.fromString(uri.getPath().substring(uri.getPath().lastIndexOf('/') + 1));
   }
 }

@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -234,7 +235,7 @@ final class PlayerEndpointTest {
     assertEquals(1, stream.filter(p -> p.getUsername().equals(stub.getUsername())).count());
   }
 
-  private URI create(final Player toCreate) throws Exception {
+  private URI create(@NonNull final Player toCreate) throws Exception {
     final var body = mapper.writeValueAsString(toCreate);
     final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
     final var res =
