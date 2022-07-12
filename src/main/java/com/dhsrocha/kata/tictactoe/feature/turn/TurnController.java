@@ -1,18 +1,17 @@
 package com.dhsrocha.kata.tictactoe.feature.turn;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 import com.dhsrocha.kata.tictactoe.base.BaseController;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URL;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -39,14 +38,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @Tag(name = Turn.TAG, description = "Represents a event which depicts the state of a Game in time.")
 @RestController
 @RequestMapping(Turn.TAG)
+@Getter
 @AllArgsConstructor
-class TurnController implements BaseController {
+class TurnController extends BaseController<Turn> {
 
   private final PagedResourcesAssembler<Turn> assembler;
   private final TurnService service;
 
   /**
-   * Retrieves a page of Action resources, based on search criteria.
+   * Retrieves a page of Turn resources, based on search criteria.
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
    * @param pageable Pagination set of parameters.
@@ -57,23 +57,21 @@ class TurnController implements BaseController {
   ResponseEntity<PagedModel<EntityModel<Turn>>> find(
       @ParameterObject final TurnService.Search criteria,
       @ParameterObject final Pageable pageable) {
-    final var self = linkTo(TurnController.class).withSelfRel();
-    return ResponseEntity.ok(assembler.toModel(service.find(criteria, pageable), self));
+    return hateoasOf(service.find(criteria, pageable));
   }
 
   /**
-   * Retrieves a Action resource, based on its external id.
+   * Retrieves a Turn resource, based on its external id.
    *
    * @param turnId Resource's external identification.
    * @return Resource found.
    */
   @ApiResponse(responseCode = "200", description = "Turn is found.")
-  @ApiResponse(responseCode = "404", description = "Turn not found.")
+  @ApiResponse(responseCode = "404", description = "Turn not found.", content = @Content)
   @GetMapping('{' + Turn.ID + '}')
-  ResponseEntity<EntityModel<Turn>> find(@PathVariable(Turn.ID) final UUID turnId) {
-    final var found = service.find(turnId).orElseThrow(ExceptionCode.TURN_NOT_FOUND);
-    final var self = linkTo(methodOn(TurnController.class).find(turnId)).withSelfRel();
-    return ResponseEntity.ok(EntityModel.of(found, self));
+  @Override
+  protected ResponseEntity<EntityModel<Turn>> find(@PathVariable(Turn.ID) final UUID turnId) {
+    return hateoasOf(turnId, service.find(turnId).orElseThrow(ExceptionCode.GAME_NOT_FOUND));
   }
 
   /**
@@ -96,6 +94,7 @@ class TurnController implements BaseController {
    * @return Resource's location URI in proper header, if not finished the game.
    */
   @ApiResponse(
+      content = @Content,
       responseCode = "201",
       description = "Turn created.",
       headers =
@@ -103,12 +102,27 @@ class TurnController implements BaseController {
               name = HttpHeaders.LOCATION,
               description = "Resource's location, if sending game is not finished.",
               schema = @Schema(implementation = URL.class)))
-  @ApiResponse(responseCode = "204", description = "Turn finished the sending Game.")
-  @ApiResponse(responseCode = "404", description = "Game not found.")
-  @ApiResponse(responseCode = "409", description = "Game is not in in progress stage.")
-  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is not in the sending game.")
-  @ApiResponse(responseCode = "409", description = "Same requesting player in game's last action.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "204",
+      description = "Turn finished the sending Game.")
+  @ApiResponse(content = @Content, responseCode = "404", description = "Game not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Game is not in in progress stage.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "404",
+      description = "Requesting player is not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is not in the sending game.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Same requesting player in game's last action.")
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   ResponseEntity<?> create(

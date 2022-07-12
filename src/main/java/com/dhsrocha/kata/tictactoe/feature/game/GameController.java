@@ -1,17 +1,16 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 import com.dhsrocha.kata.tictactoe.base.BaseController;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URL;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -40,8 +39,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @Tag(name = Game.TAG, description = "Holds a match between two Player entities.")
 @RestController
 @RequestMapping(Game.TAG)
+@Getter
 @AllArgsConstructor
-class GameController implements BaseController {
+class GameController extends BaseController<Game> {
 
   static final String JOIN = '{' + Game.ID + '}' + "/join";
   static final String SURRENDER = '{' + Game.ID + '}' + "/surrender";
@@ -61,8 +61,7 @@ class GameController implements BaseController {
   ResponseEntity<PagedModel<EntityModel<Game>>> find(
       @ParameterObject final GameService.Search criteria,
       @ParameterObject final Pageable pageable) {
-    final var self = linkTo(GameController.class).withSelfRel();
-    return ResponseEntity.ok(assembler.toModel(service.find(criteria, pageable), self));
+    return hateoasOf(service.find(criteria, pageable));
   }
 
   /**
@@ -76,12 +75,11 @@ class GameController implements BaseController {
    * @return Resource found.
    */
   @ApiResponse(responseCode = "200", description = "Game is found.")
-  @ApiResponse(responseCode = "404", description = "Game not found.")
+  @ApiResponse(responseCode = "404", description = "Game not found.", content = @Content)
   @GetMapping('{' + Game.ID + '}')
-  ResponseEntity<EntityModel<Game>> find(@PathVariable(Game.ID) final UUID gameId) {
-    final var found = service.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND);
-    final var self = linkTo(methodOn(GameController.class).find(gameId)).withSelfRel();
-    return ResponseEntity.ok(EntityModel.of(found, self));
+  @Override
+  protected ResponseEntity<EntityModel<Game>> find(@PathVariable(Game.ID) final UUID gameId) {
+    return hateoasOf(gameId, service.find(gameId).orElseThrow(ExceptionCode.GAME_NOT_FOUND));
   }
 
   /**
@@ -97,6 +95,7 @@ class GameController implements BaseController {
    * @return Resource's location URI in proper header.
    */
   @ApiResponse(
+      content = @Content,
       responseCode = "201",
       description = "Game opened.",
       headers =
@@ -104,10 +103,15 @@ class GameController implements BaseController {
               name = HttpHeaders.LOCATION,
               description = "Resource's location.",
               schema = @Schema(implementation = URL.class)))
-  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is in a ongoing game.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "404",
+      description = "Requesting player is not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is in a ongoing game.")
   @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
   ResponseEntity<?> open(@RequestParam final Type type, @RequestParam final UUID requesterId) {
     final var created = service.open(type, requesterId);
     final var uri = ServletUriComponentsBuilder.fromCurrentRequest();
@@ -131,12 +135,27 @@ class GameController implements BaseController {
    *       <li>Must not be in an ongoing game.
    *     </ul>
    */
-  @ApiResponse(responseCode = "204", description = "Joined to the sending game.")
-  @ApiResponse(responseCode = "404", description = "Game not found.")
-  @ApiResponse(responseCode = "409", description = "Game is not in awaiting stage.")
-  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is already in this game.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is in an ongoing game.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "204",
+      description = "Joined to the sending game.")
+  @ApiResponse(content = @Content, responseCode = "404", description = "Game not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Game is not in awaiting stage.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "404",
+      description = "Requesting player is not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is already in this game.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is in an ongoing game.")
   @PutMapping(JOIN)
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void join(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
@@ -158,11 +177,23 @@ class GameController implements BaseController {
    *       <li>Must be in the sending game.
    *     </ul>
    */
-  @ApiResponse(responseCode = "204", description = "Surrendered on sending game.")
-  @ApiResponse(responseCode = "404", description = "Game not found.")
-  @ApiResponse(responseCode = "409", description = "Game is not in in progress stage.")
-  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is not in the sending game.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "204",
+      description = "Surrendered on sending game.")
+  @ApiResponse(content = @Content, responseCode = "404", description = "Game not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Game is not in in progress stage.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "404",
+      description = "Requesting player is not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is not in the sending game.")
   @PutMapping(SURRENDER)
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void surrender(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
@@ -184,11 +215,20 @@ class GameController implements BaseController {
    *       <li>Must be in the sending Game.
    *     </ul>
    */
-  @ApiResponse(responseCode = "204", description = "Closed the sending game.")
-  @ApiResponse(responseCode = "404", description = "Game not found.")
-  @ApiResponse(responseCode = "409", description = "Game is not in in awaiting stage.")
-  @ApiResponse(responseCode = "404", description = "Requesting player is not found.")
-  @ApiResponse(responseCode = "409", description = "Requesting player is not in the sending game.")
+  @ApiResponse(content = @Content, responseCode = "204", description = "Closed the sending game.")
+  @ApiResponse(content = @Content, responseCode = "404", description = "Game not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Game is not in in awaiting stage.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "404",
+      description = "Requesting player is not found.")
+  @ApiResponse(
+      content = @Content,
+      responseCode = "409",
+      description = "Requesting player is not in the sending game.")
   @DeleteMapping('{' + Game.ID + '}')
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void close(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {

@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * System's configuration entry-point.
@@ -17,13 +19,18 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
  */
 @org.springframework.context.annotation.Configuration
 @EnableJpaAuditing(dateTimeProviderRef = "providerRef", modifyOnCreate = false)
-class Configuration implements RepositoryRestConfigurer {
+class Configuration implements RepositoryRestConfigurer, WebMvcConfigurer {
 
   @Override
   public void configureRepositoryRestConfiguration(
       final RepositoryRestConfiguration cfg, final CorsRegistry reg) {
     cfg.setDefaultMediaType(MediaType.APPLICATION_JSON);
     cfg.useHalAsDefaultJsonMediaType(Boolean.FALSE);
+  }
+
+  @Override
+  public void configureContentNegotiation(final ContentNegotiationConfigurer config) {
+    config.defaultContentType(MediaType.APPLICATION_JSON);
   }
 
   /**
