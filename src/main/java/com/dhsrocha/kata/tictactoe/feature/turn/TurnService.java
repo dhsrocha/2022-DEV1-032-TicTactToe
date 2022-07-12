@@ -12,6 +12,7 @@ import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -21,7 +22,8 @@ import lombok.Data;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -87,6 +89,8 @@ public abstract class TurnService {
   @AllArgsConstructor
   private static class Impl extends TurnService {
 
+    private static final Sort LAST_CREATED = Sort.by(Direction.DESC, Domain.CREATED_AT);
+
     private final TurnRepository repository;
     private final GameService gameService;
     private final PlayerService playerService;
@@ -119,26 +123,21 @@ public abstract class TurnService {
       ExceptionCode.GAME_NOT_IN_PROGRESS.unless(game.getStage() == IN_PROGRESS);
 
       final var player = playerService.find(requester).orElseThrow(ExceptionCode.PLAYER_NOT_FOUND);
-      PLAYER_NOT_IN_GAME.unless(game.getHome() == player || game.getAway() == player);
+      PLAYER_NOT_IN_GAME.unless(game.getHome().equals(player) || game.getAway().equals(player));
 
-      final var lastRound =
-          repository.findAll(turnsFrom(game), Pageable.ofSize(1)).getContent().stream().findFirst();
-      TURN_LAST_SAME_PLAYER.unless(lastRound.filter(t -> t.getPlayer() == player).isEmpty());
+      final var turns =
+          repository.findAll((r, cq, cb) -> cb.equal(r.get(Search.GAME), game), LAST_CREATED);
+      turns.stream()
+          .max(Comparator.comparing(Domain::getCreatedAt))
+          .ifPresent(t -> TURN_LAST_SAME_PLAYER.unless(!t.getPlayer().equals(player)));
 
       if (gameService.calculate(game, bitboard)) {
-        repository.deleteAll(repository.findAll(turnsFrom(game)).stream().toList());
+        repository.deleteAll(turns);
         return Optional.empty();
       }
 
       final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
       return Optional.of(repository.save(toCreate).getExternalId());
-    }
-
-    private static Specification<Turn> turnsFrom(@NonNull final Game game) {
-      return (r, cq, cb) -> {
-        cq.orderBy(cb.desc(r.get(Domain.CREATED_AT)));
-        return cb.equal(r.get(Search.GAME), game);
-      };
     }
   }
 
