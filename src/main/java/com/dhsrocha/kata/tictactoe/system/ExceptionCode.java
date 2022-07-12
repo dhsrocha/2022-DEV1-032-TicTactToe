@@ -45,7 +45,7 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   BITBOARD_UNSET_STATE(HttpStatus.BAD_REQUEST),
   /** {@link Bitboard}'s has more bits than predicted for {@link Game}'s set of rules. */
   BITBOARD_EXCESSIVE_BITS(HttpStatus.BAD_REQUEST),
-  /** {@link Bitboard}'s has overlapping bits in its subsets. */
+  /** {@link Bitboard} has overlapping bits in its subsets. */
   BITBOARD_PIECE_IN_SAME_TILE(HttpStatus.BAD_REQUEST),
   ;
   /** Corresponding HTTP status. */
@@ -54,6 +54,11 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   @Override
   public final RuntimeException get() {
     return new HttpClientErrorException(code, name());
+  }
+
+  /** Throws the indexed exception. */
+  public final void trigger() {
+    throw get();
   }
 
   /**

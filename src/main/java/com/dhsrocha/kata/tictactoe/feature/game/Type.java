@@ -4,7 +4,9 @@ import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard.Processor;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard.Result;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard.Validator;
 import java.util.BitSet;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,20 +19,34 @@ import lombok.NonNull;
  */
 @Getter(AccessLevel.PRIVATE)
 @AllArgsConstructor
-enum Type implements Processor {
+enum Type implements Processor, Validator {
   TIC_TAC_TOE(2, 9) {
     @Override
-    public Bitboard.Result process(@NonNull final Bitboard bitboard) {
-      super.validate(bitboard);
-      final var rounds = Long.bitCount(bitboard.getState());
+    public Optional<ExceptionCode> validate(@NonNull final Bitboard bitboard) {
+      final var self = TIC_TAC_TOE;
+      final var set = BitSet.valueOf(new long[] {bitboard.getState()});
+      if (set.cardinality() > self.getTiles()) {
+        return Optional.of(ExceptionCode.BITBOARD_EXCESSIVE_BITS);
+      }
+      final var home = set.get(0, self.getTiles());
+      final var away = set.get(self.getTiles(), self.getTiles() * self.getStates());
+      if (home.intersects(away)) {
+        return Optional.of(ExceptionCode.BITBOARD_PIECE_IN_SAME_TILE);
+      }
+      return Optional.empty();
+    }
+
+    @Override
+    public Bitboard.Result resultOf(@NonNull final Bitboard.Processed processed) {
+      final var rounds = Long.bitCount(processed.getState());
       if (rounds < 5) {
         return Bitboard.Result.NOT_OVER;
       }
       for (final var win : WIN_STATES) {
-        if (win == (win & (bitboard.getState() >> TIC_TAC_TOE.getTiles()))) {
+        if (win == (win & (processed.getState() >> TIC_TAC_TOE.getTiles()))) {
           return Result.HOME;
         }
-        if (win == (win & (bitboard.getState() & (1L << TIC_TAC_TOE.getTiles()) - 1))) {
+        if (win == (win & (processed.getState() & (1L << TIC_TAC_TOE.getTiles()) - 1))) {
           return Result.AWAY;
         }
       }
@@ -55,14 +71,4 @@ enum Type implements Processor {
   private final int states;
   /** Measures the board's size in tiles. */
   private final int tiles;
-
-  private void validate(final Bitboard bitboard) {
-    final var state = bitboard.getState();
-    ExceptionCode.BITBOARD_UNSET_STATE.unless(state != 0);
-    final var set = BitSet.valueOf(new long[] {state});
-    ExceptionCode.BITBOARD_EXCESSIVE_BITS.unless(set.cardinality() <= tiles);
-    final var home = set.get(0, getTiles());
-    final var away = set.get(getTiles(), getTiles() * getStates());
-    ExceptionCode.BITBOARD_PIECE_IN_SAME_TILE.unless(!home.intersects(away));
-  }
 }

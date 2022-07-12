@@ -126,7 +126,7 @@ public class Game extends Domain implements Comparable<Game> {
    */
   final @NonNull boolean resultFrom(@NonNull final Bitboard bitboard) {
     ExceptionCode.GAME_NOT_IN_PROGRESS.unless(stage == Stage.IN_PROGRESS);
-    final var result = type.process(bitboard);
+    final var result = type.resultOf(bitboard.process(type));
     if (null != away && result.isFinished()) {
       finish(Bitboard.Result.HOME == result ? home : away);
     }

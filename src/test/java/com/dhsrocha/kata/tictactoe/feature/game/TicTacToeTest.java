@@ -1,12 +1,12 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -28,9 +28,11 @@ final class TicTacToeTest implements RandomStubExtension {
       "GIVEN valid bitboard "
           + "WHEN calculating a bitboard with tic-tac-toe rule set "
           + "THEN return expected result accordingly.")
-  void expectedResult(final int bitboard, final Bitboard.Result expected) {
+  void expectedResult(final int state, final Bitboard.Result expected) {
+    // Arrange
+    final var rule = Type.TIC_TAC_TOE;
     // Act
-    final var actual = Type.TIC_TAC_TOE.process(Bitboard.of(bitboard));
+    final var actual = rule.resultOf(Bitboard.of(state).process(rule));
     // Assert
     assertEquals(expected, actual);
   }
@@ -42,11 +44,11 @@ final class TicTacToeTest implements RandomStubExtension {
           + "WHEN calculating a bitboard with tic-tac-toe rule set "
           + "THEN IllegalArgumentException is thrown.")
   void invalidStub(final int invalidStub, final ExceptionCode code) {
+    // Arrange
+    final var rule = Type.TIC_TAC_TOE;
+    final var bitboard = Bitboard.of(invalidStub);
     // Act
-    final var ex =
-        Assertions.assertThrows(
-            HttpClientErrorException.class,
-            () -> Type.TIC_TAC_TOE.process(Bitboard.of(invalidStub)));
+    final var ex = assertThrows(HttpClientErrorException.class, () -> bitboard.process(rule));
     // Assert
     assertEquals(HttpStatus.BAD_REQUEST.value() + " " + code.name(), ex.getMessage());
   }
