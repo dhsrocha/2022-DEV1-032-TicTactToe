@@ -4,11 +4,13 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.TURN_LAST_SAME_PLAYER;
 
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
+import com.dhsrocha.kata.tictactoe.feature.turn.TurnService.Search;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -32,29 +34,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class TurnService {
-
-  /**
-   * Retrieves a page of {@link Turn} resources, based on search criteria.
-   *
-   * @param criteria Search criteria with corresponding {@link Turn}'s attributes.
-   * @param pageable Pagination set of parameters.
-   * @return Pagination set of {@link Turn} resources.
-   */
-  abstract @NonNull Page<Turn> find(
-      @NonNull final Search criteria, @NonNull final Pageable pageable);
-
-  /**
-   * Retrieves a {@link Turn} resource, based on its external id.
-   *
-   * @param turnId {@link Turn}'s external identification:
-   *     <ul>
-   *       <li>Must belong to an existing turn.
-   *     </ul>
-   *
-   * @return {@link Turn} found.
-   */
-  abstract @NonNull Optional<Turn> find(@NonNull final UUID turnId);
+public abstract class TurnService implements FinderService<Search, Turn> {
 
   /**
    * Creates a {@link Turn} resource and attaches it to the {@link Game} in progress the requester

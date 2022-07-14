@@ -41,7 +41,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping(Player.TAG)
 @Getter
 @AllArgsConstructor
-class PlayerController extends BaseController<Player> {
+class PlayerController extends BaseController<PlayerService.Search, Player> {
 
   private final PagedResourcesAssembler<Player> assembler;
   private final PlayerService service;
@@ -55,10 +55,10 @@ class PlayerController extends BaseController<Player> {
    */
   @ApiResponse(responseCode = "200", description = "Player page is retrieved.")
   @GetMapping
-  ResponseEntity<PagedModel<EntityModel<Player>>> find(
+  protected ResponseEntity<PagedModel<EntityModel<Player>>> find(
       @ParameterObject final PlayerService.Search criteria,
       @ParameterObject final Pageable pageable) {
-    return hateoasOf(service.find(criteria, pageable));
+    return super.find(criteria, pageable);
   }
 
   /**

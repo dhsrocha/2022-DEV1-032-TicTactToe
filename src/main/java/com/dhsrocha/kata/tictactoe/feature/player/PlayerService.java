@@ -1,6 +1,8 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,29 +21,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class PlayerService {
-
-  /**
-   * Retrieves a page of {@link Player} resources, based on search criteria.
-   *
-   * @param criteria Search criteria with corresponding entity type's attributes.
-   * @param pageable Pagination set of parameters.
-   * @return Pagination set of {@link Player} resources.
-   */
-  abstract @NonNull Page<Player> find(
-      @NonNull final Search criteria, @NonNull final Pageable pageable);
-
-  /**
-   * Retrieves a {@link Player} resource, based on its external id.
-   *
-   * @param playerId Resource's external identification:
-   *     <ul>
-   *       <li>Must belong to an existing active player.
-   *     </ul>
-   *
-   * @return {@link Player} found.
-   */
-  public abstract @NonNull Optional<Player> find(@NonNull final UUID playerId);
+public abstract class PlayerService implements FinderService<Search, Player> {
 
   /**
    * Persists a {@link Player} resource.

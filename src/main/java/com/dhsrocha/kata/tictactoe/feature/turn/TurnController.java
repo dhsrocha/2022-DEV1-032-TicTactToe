@@ -40,7 +40,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping(Turn.TAG)
 @Getter
 @AllArgsConstructor
-class TurnController extends BaseController<Turn> {
+class TurnController extends BaseController<TurnService.Search, Turn> {
 
   private final PagedResourcesAssembler<Turn> assembler;
   private final TurnService service;
@@ -54,7 +54,7 @@ class TurnController extends BaseController<Turn> {
    */
   @ApiResponse(responseCode = "200", description = "Turn page is retrieved.")
   @GetMapping
-  ResponseEntity<PagedModel<EntityModel<Turn>>> find(
+  protected ResponseEntity<PagedModel<EntityModel<Turn>>> find(
       @ParameterObject final TurnService.Search criteria,
       @ParameterObject final Pageable pageable) {
     return hateoasOf(service.find(criteria, pageable));

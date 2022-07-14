@@ -41,7 +41,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping(Game.TAG)
 @Getter
 @AllArgsConstructor
-class GameController extends BaseController<Game> {
+class GameController extends BaseController<GameService.Search, Game> {
 
   static final String JOIN = '{' + Game.ID + '}' + "/join";
   static final String SURRENDER = '{' + Game.ID + '}' + "/surrender";
@@ -53,15 +53,15 @@ class GameController extends BaseController<Game> {
    * Retrieves a page of Game resources, based on search criteria.
    *
    * @param criteria Search criteria with corresponding entity type's attributes.
-   * @param pageable Pagination set of parameters.
+   * @param page Pagination set of parameters.
    * @return Paginated set of resources, with additional information about it.
    */
   @ApiResponse(responseCode = "200", description = "Game page is retrieved.")
   @GetMapping
-  ResponseEntity<PagedModel<EntityModel<Game>>> find(
+  protected ResponseEntity<PagedModel<EntityModel<Game>>> find(
       @ParameterObject final GameService.Search criteria,
-      @ParameterObject final Pageable pageable) {
-    return hateoasOf(service.find(criteria, pageable));
+      @ParameterObject final Pageable page) {
+    return super.find(criteria, page);
   }
 
   /**

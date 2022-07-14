@@ -5,7 +5,9 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.feature.game.GameService.Search;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
@@ -30,7 +32,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class GameService {
+public abstract class GameService implements FinderService<Search, Game> {
 
   /**
    * Process game result according to corresponding bitboard.
@@ -44,24 +46,6 @@ public abstract class GameService {
    * @return Indicates if the instance's result corresponds to a {@link Game}'s end.
    */
   public abstract boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
-
-  /**
-   * Retrieves a {@link Game} resource, based on its external id.
-   *
-   * @param id {@link Game}'s external identification.
-   * @return {@link Game} found.
-   */
-  public abstract @NonNull Optional<Game> find(@NonNull final UUID id);
-
-  /**
-   * Retrieves a page of {@link Game} resources, based on search criteria.
-   *
-   * @param criteria Search criteria with corresponding {@link Game}'s attributes.
-   * @param pageable Pagination set of parameters.
-   * @return Pagination set of {@link Game} resources.
-   */
-  abstract @NonNull Page<Game> find(
-      @NonNull final Search criteria, @NonNull final Pageable pageable);
 
   /**
    * Opens a {@link Game}, by creating it as a resource, and adds the requesting {@link Player} as
