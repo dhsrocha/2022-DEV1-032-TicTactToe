@@ -25,6 +25,8 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   PLAYER_NOT_IN_GAME(HttpStatus.CONFLICT),
   /** {@link Player} is already in {@link Game}. */
   PLAYER_ALREADY_IN_GAME(HttpStatus.CONFLICT),
+  /** {@link Player}'s activation has failed. */
+  PLAYER_ACTIVATION_FAILED(HttpStatus.CONFLICT),
 
   // Game
   /** {@link Game} could not be found. */

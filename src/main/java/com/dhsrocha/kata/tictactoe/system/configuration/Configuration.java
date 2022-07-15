@@ -2,6 +2,7 @@ package com.dhsrocha.kata.tictactoe.system.configuration;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @org.springframework.context.annotation.Configuration
+@EnableCaching
 @EnableJpaAuditing(dateTimeProviderRef = "providerRef", modifyOnCreate = false)
 class Configuration implements RepositoryRestConfigurer, WebMvcConfigurer {
 

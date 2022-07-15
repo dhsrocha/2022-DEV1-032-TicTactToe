@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URL;
 import java.util.UUID;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springdoc.api.annotations.ParameterObject;
@@ -21,11 +23,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -143,5 +147,20 @@ class PlayerController extends BaseController<PlayerService.Search, Player> {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void remove(@PathVariable(Player.ID) final UUID playerId) {
     ExceptionCode.PLAYER_NOT_FOUND.unless(service.remove(playerId));
+  }
+
+  /**
+   * Activates an inactive Player if the sent confirmation code matches to the cached one at record
+   * creation.
+   *
+   * @param playerId Player's id who wants to be activated.
+   * @param token Confirmation which must be equal to the cached one to let the operation succeed.
+   */
+  @PatchMapping
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  void activate(
+      @PathVariable(Player.ID) final UUID playerId,
+      @RequestParam @Positive @Digits(integer = 12, fraction = 0) final int token) {
+    ExceptionCode.PLAYER_ACTIVATION_FAILED.unless(service.enable(playerId, token));
   }
 }

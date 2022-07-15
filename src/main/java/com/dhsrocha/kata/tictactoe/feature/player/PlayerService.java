@@ -3,16 +3,20 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.auth.Auth.Role;
+import com.dhsrocha.kata.tictactoe.feature.email.EmailService;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.User;
@@ -63,6 +67,16 @@ public abstract class PlayerService implements BaseService<Search, Player> {
    */
   abstract boolean remove(@NonNull final UUID playerId);
 
+  /**
+   * Activates an inactive {@link Player} if the sent confirmation code matches to the cached one at
+   * record creation.
+   *
+   * @param playerId Player's id who wants to be activated.
+   * @param token Confirmation which must be equal to the cached one to let the operation succeed.
+   * @return If operation is successfully activated. Evicts the related stored cache afterwards.
+   */
+  abstract boolean enable(@NonNull final UUID playerId, @NonNull final int token);
+
   /** {@inheritDoc} */
   @SuppressWarnings("unused")
   @Validated
@@ -71,6 +85,7 @@ public abstract class PlayerService implements BaseService<Search, Player> {
   private static class Impl extends PlayerService implements UserDetailsService {
 
     private final PlayerRepository repository;
+    private final EmailService emailService;
     private final UserDetailsManager authService;
 
     @Override
@@ -110,6 +125,8 @@ public abstract class PlayerService implements BaseService<Search, Player> {
       final var p = repository.save(toCreate.toBuilder().active(Boolean.TRUE).build());
       final var auth = User.withUsername(p.getExternalId().toString()).authorities(Role.PLAYER);
       authService.createUser(auth.password(p.getExternalId().toString()).build());
+      final var token = tokenOf(p);
+      ExceptionCode.PLAYER_ALREADY_IN_GAME.unless(emailService.send(p, token));
       return p;
     }
 
@@ -133,13 +150,28 @@ public abstract class PlayerService implements BaseService<Search, Player> {
 
     @Override
     public boolean remove(@NonNull final UUID id) {
+      return toggle(id, Boolean.FALSE);
+    }
+
+    @Override
+    @CacheEvict(key = "{#id}")
+    boolean enable(@NonNull final UUID id, final int token) {
+      return toggle(id, Boolean.TRUE);
+    }
+
+    private boolean toggle(@NonNull final UUID id, final boolean active) {
       final var found = find(id);
       found.ifPresent(
           p -> {
-            p.setActive(Boolean.FALSE);
+            p.setActive(active);
             repository.save(p);
           });
       return found.isPresent();
+    }
+
+    @Cacheable(key = "{#player.externalId}")
+    private int tokenOf(@NonNull final Player player) {
+      return ThreadLocalRandom.current().nextInt(100_000, 999_999);
     }
   }
 
