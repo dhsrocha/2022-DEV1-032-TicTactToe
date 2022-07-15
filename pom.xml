@@ -12,7 +12,7 @@
 
   <groupId>com.dhsrocha.kata</groupId>
   <artifactId>tic-tac-toe</artifactId>
-  <version>0.9.0</version>
+  <version>0.10.0</version>
   <packaging>jar</packaging>
 
   <name>Kata: Tic-Tac-Toe</name>
