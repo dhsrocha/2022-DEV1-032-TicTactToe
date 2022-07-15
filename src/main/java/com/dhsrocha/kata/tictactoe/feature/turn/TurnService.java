@@ -5,7 +5,7 @@ import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAM
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.TURN_LAST_SAME_PLAYER;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
-import com.dhsrocha.kata.tictactoe.base.FinderService;
+import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
@@ -34,7 +34,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class TurnService implements FinderService<Search, Turn> {
+public abstract class TurnService implements BaseService<Search, Turn> {
 
   /**
    * Creates a {@link Turn} resource and attaches it to the {@link Game} in progress the requester

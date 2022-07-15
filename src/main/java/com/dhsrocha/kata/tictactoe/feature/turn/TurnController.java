@@ -57,7 +57,7 @@ class TurnController extends BaseController<TurnService.Search, Turn> {
   protected ResponseEntity<PagedModel<EntityModel<Turn>>> find(
       @ParameterObject final TurnService.Search criteria,
       @ParameterObject final Pageable pageable) {
-    return hateoasOf(service.find(criteria, pageable));
+    return super.find(criteria, pageable);
   }
 
   /**

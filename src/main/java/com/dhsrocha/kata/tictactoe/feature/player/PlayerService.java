@@ -1,7 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
-import com.dhsrocha.kata.tictactoe.base.FinderService;
+import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class PlayerService implements FinderService<Search, Player> {
+public abstract class PlayerService implements BaseService<Search, Player> {
 
   /**
    * Persists a {@link Player} resource.

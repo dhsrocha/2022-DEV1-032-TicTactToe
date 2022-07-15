@@ -5,15 +5,16 @@ import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 /**
- * .
+ * Standard {@link Service} operations for {@link Domain} implementations.
  *
  * @param <S> Data transfer object used to hold search criteria parameters.
  * @param <D> A representing {@link Domain domain} in the system.
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public interface FinderService<S, D extends Domain> {
+public interface BaseService<S, D extends Domain> {
 
   /**
    * Retrieves a page of {@link Domain} resources, based on search criteria.

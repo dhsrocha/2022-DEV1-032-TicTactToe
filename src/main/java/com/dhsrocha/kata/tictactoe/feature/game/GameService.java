@@ -6,7 +6,7 @@ import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAM
 
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
 import com.dhsrocha.kata.tictactoe.base.Domain;
-import com.dhsrocha.kata.tictactoe.base.FinderService;
+import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService.Search;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
@@ -32,7 +32,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
-public abstract class GameService implements FinderService<Search, Game> {
+public abstract class GameService implements BaseService<Search, Game> {
 
   /**
    * Process game result according to corresponding bitboard.
