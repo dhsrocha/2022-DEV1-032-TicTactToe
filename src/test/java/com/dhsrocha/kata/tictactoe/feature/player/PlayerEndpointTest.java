@@ -28,10 +28,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -105,14 +108,14 @@ final class PlayerEndpointTest {
     res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
   }
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("invalidStubs")
   @DisplayName(
       "GIVEN invalid resource body "
           + "WHEN creating player resource "
           + "THEN return HTTP status 422.")
-  void givenInvalidRequest_whenCreate_thenReturnStatus422() throws Exception {
+  void givenInvalidRequest_whenCreate_thenReturnStatus422(Player invalidStub) throws Exception {
     // Arrange
-    final var invalidStub = PlayerTest.validStub().toBuilder().username("2").build();
     final var json = mapper.writeValueAsString(invalidStub);
     // Act
     final var req = post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json);
@@ -211,6 +214,11 @@ final class PlayerEndpointTest {
         .andExpect(jsonPath("$.externalId").doesNotExist())
         .andExpect(jsonPath("$.active", is(toUpdate.isActive())))
         .andExpect(jsonPath("$.username", is(toUpdate.getUsername())))
+        .andExpect(jsonPath("$.gender", is(toUpdate.getGender().name())))
+        .andExpect(jsonPath("$.firstName", is(toUpdate.getFirstName())))
+        .andExpect(jsonPath("$.lastName", is(toUpdate.getLastName())))
+        .andExpect(jsonPath("$.email", is(toUpdate.getEmail())))
+        .andExpect(jsonPath("$.birthDate", is(toUpdate.getBirthDate().toString())))
         .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
         .andExpect(jsonPath("$.updatedAt", is(notNullValue(OffsetDateTime.class))));
   }
@@ -241,5 +249,19 @@ final class PlayerEndpointTest {
     final var res =
         mvc.perform(req).andExpect(status().isCreated()).andExpect(header().exists(LOCATION));
     return URI.create(Objects.requireNonNull(res.andReturn().getResponse().getHeader(LOCATION)));
+  }
+
+  private static Stream<Player> invalidStubs() {
+    return Stream.of(
+        // username
+        PlayerTest.validStub().toBuilder().username("player2").build(),
+        // first name
+        PlayerTest.validStub().toBuilder().firstName("first").build(),
+        // last name
+        PlayerTest.validStub().toBuilder().lastName("last").build(),
+        // email
+        PlayerTest.validStub().toBuilder().email("string").build(),
+        // birthdate
+        PlayerTest.validStub().toBuilder().birthDate(OffsetDateTime.now().plusMinutes(1)).build());
   }
 }

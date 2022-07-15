@@ -103,6 +103,11 @@ public abstract class PlayerService implements FinderService<Search, Player> {
       return found -> {
         found.setActive(toUpdate.isActive());
         found.setUsername(toUpdate.getUsername());
+        found.setGender(toUpdate.getGender());
+        found.setEmail(toUpdate.getEmail());
+        found.setFirstName(toUpdate.getFirstName());
+        found.setLastName(toUpdate.getLastName());
+        found.setBirthDate(toUpdate.getBirthDate());
         return repository.save(found);
       };
     }

@@ -3,7 +3,10 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.dhsrocha.kata.tictactoe.feature.player.Player.Gender;
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +50,13 @@ public final class PlayerTest implements RandomStubExtension {
 
   public static Player validStub() {
     return Player.builder()
-        .username(FAKER.regexify("[a-z][a-z_]{19}"))
         .active(FAKER.bool().bool())
+        .username(FAKER.regexify("[a-z][a-z_]{19}"))
+        .gender(RandomStubExtension.randomOf(Gender.class))
+        .firstName(FAKER.regexify("[A-Z][a-z]{19}"))
+        .lastName(FAKER.regexify("[A-Z][a-z]{19}"))
+        .email(FAKER.internet().emailAddress())
+        .birthDate(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS).minusSeconds(1))
         .build();
   }
 
