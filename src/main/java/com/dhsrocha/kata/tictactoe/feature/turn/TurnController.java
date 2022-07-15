@@ -71,7 +71,7 @@ class TurnController extends BaseController<TurnService.Search, Turn> {
   @GetMapping('{' + Turn.ID + '}')
   @Override
   protected ResponseEntity<EntityModel<Turn>> find(@PathVariable(Turn.ID) final UUID turnId) {
-    return hateoasOf(turnId, service.find(turnId).orElseThrow(ExceptionCode.GAME_NOT_FOUND));
+    return hateoasOf(turnId, service.find(turnId).orElseThrow(ExceptionCode.TURN_NOT_FOUND));
   }
 
   /**
