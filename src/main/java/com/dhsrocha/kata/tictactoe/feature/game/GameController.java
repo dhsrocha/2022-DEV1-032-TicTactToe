@@ -59,8 +59,7 @@ class GameController extends BaseController<GameService.Search, Game> {
   @ApiResponse(responseCode = "200", description = "Game page is retrieved.")
   @GetMapping
   protected ResponseEntity<PagedModel<EntityModel<Game>>> find(
-      @ParameterObject final GameService.Search criteria,
-      @ParameterObject final Pageable page) {
+      @ParameterObject final GameService.Search criteria, @ParameterObject final Pageable page) {
     return super.find(criteria, page);
   }
 

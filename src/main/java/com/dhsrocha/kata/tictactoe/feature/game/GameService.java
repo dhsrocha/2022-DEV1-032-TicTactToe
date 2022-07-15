@@ -5,8 +5,8 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 
 import com.dhsrocha.kata.tictactoe.base.BaseRepository;
-import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService.Search;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;

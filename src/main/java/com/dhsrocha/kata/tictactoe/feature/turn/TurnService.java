@@ -4,8 +4,8 @@ import static com.dhsrocha.kata.tictactoe.feature.game.Game.Stage.IN_PROGRESS;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.PLAYER_NOT_IN_GAME;
 import static com.dhsrocha.kata.tictactoe.system.ExceptionCode.TURN_LAST_SAME_PLAYER;
 
-import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.game.GameService;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;

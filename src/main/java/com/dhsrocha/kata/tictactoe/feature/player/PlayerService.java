@@ -1,7 +1,7 @@
 package com.dhsrocha.kata.tictactoe.feature.player;
 
-import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
+import com.dhsrocha.kata.tictactoe.base.FinderService;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
