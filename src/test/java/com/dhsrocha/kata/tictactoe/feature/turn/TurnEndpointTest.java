@@ -95,10 +95,10 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act
-      final var resOpener = notOverTurn(game, opener).andExpect(status().isCreated());
-      final var resJoiner = notOverTurn(game, joiner).andExpect(status().isCreated());
+      final var resOpener = notOverTurn(opener, game).andExpect(status().isCreated());
+      final var resJoiner = notOverTurn(joiner, game).andExpect(status().isCreated());
       // Assert
       mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
           .andExpect(status().isOk())
@@ -142,10 +142,10 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       final var res = game(opener);
       final var game = idFrom(res);
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act
-      notOverTurn(game, opener).andExpect(status().isCreated());
-      turn(game, joiner, 0b0_000_101_010__111_000_000).andExpect(status().isNoContent());
+      notOverTurn(opener, game).andExpect(status().isCreated());
+      turn(joiner, game, 0b0_000_101_010__111_000_000).andExpect(status().isNoContent());
       fromLocation(res)
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.winner.id", is(joiner.toString())));
@@ -162,9 +162,9 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
-      notOverTurn(UUID.randomUUID(), opener).andExpect(status().isNotFound());
+      notOverTurn(opener, UUID.randomUUID()).andExpect(status().isNotFound());
     }
 
     @Test
@@ -177,7 +177,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var game = idFrom(game(opener));
       // Act - Assert
-      notOverTurn(game, opener).andExpect(status().isConflict());
+      notOverTurn(opener, game).andExpect(status().isConflict());
     }
 
     @Test
@@ -191,9 +191,9 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
-      notOverTurn(game, UUID.randomUUID()).andExpect(status().isNotFound());
+      notOverTurn(UUID.randomUUID(), game).andExpect(status().isNotFound());
     }
 
     @Test
@@ -208,9 +208,9 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       final var third = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
-      notOverTurn(game, third).andExpect(status().isConflict());
+      notOverTurn(third, game).andExpect(status().isConflict());
     }
 
     @Test
@@ -225,14 +225,14 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
 
-      notOverTurn(game, opener).andExpect(status().isCreated());
-      notOverTurn(game, joiner).andExpect(status().isCreated());
-      notOverTurn(game, opener).andExpect(status().isCreated());
+      notOverTurn(opener, game).andExpect(status().isCreated());
+      notOverTurn(joiner, game).andExpect(status().isCreated());
+      notOverTurn(opener, game).andExpect(status().isCreated());
       // Act - Assert
-      notOverTurn(game, opener).andExpect(status().isConflict());
-      notOverTurn(game, joiner).andExpect(status().isCreated());
+      notOverTurn(opener, game).andExpect(status().isConflict());
+      notOverTurn(joiner, game).andExpect(status().isCreated());
     }
 
     @Test
@@ -248,18 +248,18 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var opener1 = player().getExternalId();
       final var joiner1 = player().getExternalId();
       final var game1 = idFrom(game(opener1));
-      join(game1, joiner1).andExpect(status().isNoContent());
-      notOverTurn(game1, joiner1);
+      join(joiner1, game1).andExpect(status().isNoContent());
+      notOverTurn(joiner1, game1);
 
       final var opener2 = player().getExternalId();
       final var joiner2 = player().getExternalId();
       final var game2 = idFrom(game(opener2));
-      join(game2, joiner2).andExpect(status().isNoContent());
-      final var toPreserve1 = notOverTurn(game2, opener2).andExpect(status().isCreated());
-      final var toPreserve2 = notOverTurn(game2, joiner2).andExpect(status().isCreated());
-      final var toPreserve3 = notOverTurn(game2, opener2).andExpect(status().isCreated());
+      join(joiner2, game2).andExpect(status().isNoContent());
+      final var toPreserve1 = notOverTurn(opener2, game2).andExpect(status().isCreated());
+      final var toPreserve2 = notOverTurn(joiner2, game2).andExpect(status().isCreated());
+      final var toPreserve3 = notOverTurn(opener2, game2).andExpect(status().isCreated());
       // Act
-      turn(game1, opener1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
+      turn(opener1, game1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
       // Assert
       fromLocation(toPreserve3)
           .andExpect(status().isOk())

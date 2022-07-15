@@ -20,6 +20,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,17 +78,17 @@ class TurnController extends BaseController<TurnService.Search, Turn> {
   /**
    * Creates a Turn resource and attaches it to the Game in progress the requester is in.
    *
-   * @param gameId Game's external identification:
-   *     <ul>
-   *       <li>Must belong to an existing game.
-   *       <li>Must be in the in-progress stage.
-   *     </ul>
-   *
-   * @param requesterId Requesting player's external identification:
+   * @param auth Requesting player's external identification:
    *     <ul>
    *       <li>Must belong to an existing active player.
    *       <li>Must be in the sending game.
    *       <li>Must be different from the one who created last action for the sending game.
+   *     </ul>
+   *
+   * @param gameId Game's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing game.
+   *       <li>Must be in the in-progress stage.
    *     </ul>
    *
    * @param bitboard Representation of Game's state in bitboard notation.
@@ -126,10 +127,9 @@ class TurnController extends BaseController<TurnService.Search, Turn> {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   ResponseEntity<?> create(
-      @RequestParam final UUID gameId,
-      @RequestParam final UUID requesterId,
-      @RequestParam final long bitboard) {
-    final var created = service.create(gameId, requesterId, Bitboard.of(bitboard));
+      Authentication auth, @RequestParam final UUID gameId, @RequestParam final long bitboard) {
+    final var created =
+        service.create(gameId, UUID.fromString(auth.getName()), Bitboard.of(bitboard));
     if (created.isPresent()) {
       final var uri = ServletUriComponentsBuilder.fromCurrentRequest();
       final var location = uri.pathSegment(String.valueOf(created.get())).build().toUri();

@@ -148,12 +148,12 @@ final class GameEndpointTest extends BaseEndpointTest {
             + "THEN game is in progress.")
     void given2Players_whenJoin_requesterIsJoinedToGame() throws Exception {
       // Arrange
-      final var opener = player();
-      final var res = game(opener.getExternalId()).andExpect(status().isCreated());
+      final var opener = player().getExternalId();
+      final var res = game(opener).andExpect(status().isCreated());
       final var game = idFrom(res);
       // Act
-      final var joiner = player();
-      join(game, joiner.getExternalId()).andExpect(status().isNoContent());
+      final var joiner = player().getExternalId();
+      join(joiner, game).andExpect(status().isNoContent());
       // Assert
       fromLocation(res)
           .andExpect(status().isOk())
@@ -171,7 +171,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       game(opener);
       // Act - Assert
-      join(UUID.randomUUID(), joiner).andExpect(status().isNotFound());
+      join(joiner, UUID.randomUUID()).andExpect(status().isNotFound());
     }
 
     @Test
@@ -182,9 +182,9 @@ final class GameEndpointTest extends BaseEndpointTest {
     void givenOpenedGame_whenJoin_thenReturn409_GAME_NOT_IN_AWAITS() throws Exception {
       // Arrange
       final var game = idFrom(game(player().getExternalId()).andExpect(status().isCreated()));
-      join(game, player().getExternalId()).andExpect(status().isNoContent());
+      join(player().getExternalId(), game).andExpect(status().isNoContent());
       // Act - Assert
-      join(game, player().getExternalId()).andExpect(status().isConflict());
+      join(player().getExternalId(), game).andExpect(status().isConflict());
     }
 
     @Test
@@ -197,7 +197,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       // Arrange
       final var game = idFrom(game(player().getExternalId()).andExpect(status().isCreated()));
       // Act - Assert
-      join(game, UUID.randomUUID()).andExpect(status().isNotFound());
+      join(UUID.randomUUID(), game).andExpect(status().isNotFound());
     }
 
     @Test
@@ -212,11 +212,11 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       final var someone = player().getExternalId();
       final var game = idFrom(game(opener).andExpect(status().isCreated()));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
-      join(game, opener).andExpect(status().isConflict());
-      join(game, joiner).andExpect(status().isConflict());
-      join(game, someone).andExpect(status().isConflict());
+      join(opener, game).andExpect(status().isConflict());
+      join(joiner, game).andExpect(status().isConflict());
+      join(someone, game).andExpect(status().isConflict());
     }
 
     @Test
@@ -230,11 +230,11 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
       final var opener2 = player().getExternalId();
       final var game2 = idFrom(game(opener2));
-      join(game2, joiner).andExpect(status().isConflict());
+      join(joiner, game2).andExpect(status().isConflict());
     }
   }
 
@@ -253,9 +253,9 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var res = game(opener);
-      join(idFrom(res), joiner).andExpect(status().isNoContent());
+      join(joiner, idFrom(res)).andExpect(status().isNoContent());
       // Act
-      surrender(idFrom(res), joiner).andExpect(status().isNoContent());
+      surrender(joiner, idFrom(res)).andExpect(status().isNoContent());
       // Assert
       fromLocation(res)
           .andExpect(status().isOk())
@@ -277,11 +277,11 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       final var res = game(opener);
       final var game = idFrom(res);
-      join(game, joiner).andExpect(status().isNoContent());
-      turn(game, opener);
-      turn(game, joiner);
+      join(joiner, game).andExpect(status().isNoContent());
+      turn(opener, game);
+      turn(joiner, game);
       // Act
-      surrender(game, joiner).andExpect(status().isNoContent());
+      surrender(joiner, game).andExpect(status().isNoContent());
       // Assert
       mvc.perform(withAdmin(get(URI_TURN))).andExpect(jsonPath("$.page.totalElements", is(0)));
     }
@@ -297,9 +297,9 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act - Assert
-      surrender(UUID.randomUUID(), joiner).andExpect(status().isNotFound());
+      surrender(joiner, UUID.randomUUID()).andExpect(status().isNotFound());
     }
 
     @Test
@@ -313,7 +313,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var game = idFrom(game(opener));
       // Act
-      final var surrendered = join(game, opener);
+      final var surrendered = join(opener, game);
       // Assert
       surrendered.andExpect(status().isConflict());
     }
@@ -329,9 +329,9 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act
-      final var surrendered = surrender(game, UUID.randomUUID());
+      final var surrendered = surrender(UUID.randomUUID(), game);
       // Assert
       surrendered.andExpect(status().isNotFound());
     }
@@ -349,9 +349,9 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var joiner = player().getExternalId();
       final var third = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner).andExpect(status().isNoContent());
+      join(joiner, game).andExpect(status().isNoContent());
       // Act
-      final var surrendered = surrender(game, third);
+      final var surrendered = surrender(third, game);
       // Assert
       surrendered.andExpect(status().isConflict());
     }
@@ -371,7 +371,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var game = game(opener);
       // Act
-      final var closed = close(idFrom(game), opener);
+      final var closed = close(opener, idFrom(game));
       // Assert
       closed.andExpect(status().isNoContent());
       fromLocation(game)
@@ -390,7 +390,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       game(opener);
       // Act
-      final var closed = close(UUID.randomUUID(), opener);
+      final var closed = close(opener, UUID.randomUUID());
       // Assert
       closed.andExpect(status().isNotFound());
     }
@@ -405,9 +405,9 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var joiner = player().getExternalId();
       final var game = idFrom(game(opener));
-      join(game, joiner);
+      join(joiner, game);
       // Act
-      final var closed = close(game, opener);
+      final var closed = close(opener, game);
       // Assert
       closed.andExpect(status().isConflict());
     }
@@ -423,7 +423,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var opener = player().getExternalId();
       final var game = idFrom(game(opener));
       // Act
-      final var closed = close(game, UUID.randomUUID());
+      final var closed = close(UUID.randomUUID(), game);
       // Assert
       closed.andExpect(status().isNotFound());
     }
@@ -441,7 +441,7 @@ final class GameEndpointTest extends BaseEndpointTest {
       final var another = player().getExternalId();
       final var game = idFrom(game(opener));
       // Act
-      final var closed = close(game, another);
+      final var closed = close(another, game);
       // Assert
       closed.andExpect(status().isConflict());
     }

@@ -19,6 +19,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,13 +85,13 @@ class GameController extends BaseController<GameService.Search, Game> {
   /**
    * Opens a Game, by creating it as a resource and adds the requesting Player as the home one.
    *
-   * @param type Type of Game to create.
-   * @param requesterId Requester's external identification:
+   * @param auth Requester's external identification:
    *     <ul>
    *       <li>Must belong to an existing player.
    *       <li>Must not be in an ongoing game.
    *     </ul>
    *
+   * @param type Type of Game to create.
    * @return Resource's location URI in proper header.
    */
   @ApiResponse(
@@ -111,8 +112,8 @@ class GameController extends BaseController<GameService.Search, Game> {
       responseCode = "409",
       description = "Requesting player is in a ongoing game.")
   @PostMapping
-  ResponseEntity<?> open(@RequestParam final Type type, @RequestParam final UUID requesterId) {
-    final var created = service.open(type, requesterId);
+  ResponseEntity<?> open(final Authentication auth, @RequestParam final Type type) {
+    final var created = service.open(type, UUID.fromString(auth.getName()));
     final var uri = ServletUriComponentsBuilder.fromCurrentRequest();
     final var location = uri.pathSegment(String.valueOf(created)).build().toUri();
     return ResponseEntity.created(location).build();
@@ -121,17 +122,17 @@ class GameController extends BaseController<GameService.Search, Game> {
   /**
    * Joins a Player to an awaiting Game and sets it to the next stage.
    *
-   * @param gameId Game's external identification:
-   *     <ul>
-   *       <li>Must belong to an existing record.
-   *       <li>Must be in the awaiting stage.
-   *     </ul>
-   *
-   * @param requesterId Requesting Player's external identification:
+   * @param auth Requesting Player's external identification:
    *     <ul>
    *       <li>Must belong to an existing player.
    *       <li>Must not be in the sending game.
    *       <li>Must not be in an ongoing game.
+   *     </ul>
+   *
+   * @param gameId Game's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing record.
+   *       <li>Must be in the awaiting stage.
    *     </ul>
    */
   @ApiResponse(
@@ -157,23 +158,23 @@ class GameController extends BaseController<GameService.Search, Game> {
       description = "Requesting player is in an ongoing game.")
   @PutMapping(JOIN)
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void join(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
-    service.join(gameId, requesterId);
+  void join(final Authentication auth, @PathVariable(Game.ID) final UUID gameId) {
+    service.join(gameId, UUID.fromString(auth.getName()));
   }
 
   /**
    * Requesting Player gives up the sending Game and sets the opponent as winner.
    *
+   * @param auth Requesting player's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active player.
+   *       <li>Must be in the sending game.
+   *     </ul>
+   *
    * @param gameId Game's external identification:
    *     <ul>
    *       <li>Must belong to an existing game.
    *       <li>Must be in the progress stage.
-   *     </ul>
-   *
-   * @param requesterId Requesting player's external identification:
-   *     <ul>
-   *       <li>Must belong to an existing active player.
-   *       <li>Must be in the sending game.
    *     </ul>
    */
   @ApiResponse(
@@ -195,23 +196,23 @@ class GameController extends BaseController<GameService.Search, Game> {
       description = "Requesting player is not in the sending game.")
   @PutMapping(SURRENDER)
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void surrender(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
-    service.surrender(gameId, requesterId);
+  void surrender(final Authentication auth, @PathVariable(Game.ID) final UUID gameId) {
+    service.surrender(gameId, UUID.fromString(auth.getName()));
   }
 
   /**
    * Closes an awaiting Game.
    *
+   * @param auth Requesting player's external identification:
+   *     <ul>
+   *       <li>Must belong to an existing active Player.
+   *       <li>Must be in the sending Game.
+   *     </ul>
+   *
    * @param gameId Game's external identification:
    *     <ul>
    *       <li>Must belong to an existing game.
    *       <li>Must be in the awaiting stage.
-   *     </ul>
-   *
-   * @param requesterId Requesting player's external identification:
-   *     <ul>
-   *       <li>Must belong to an existing active Player.
-   *       <li>Must be in the sending Game.
    *     </ul>
    */
   @ApiResponse(content = @Content, responseCode = "204", description = "Closed the sending game.")
@@ -230,7 +231,7 @@ class GameController extends BaseController<GameService.Search, Game> {
       description = "Requesting player is not in the sending game.")
   @DeleteMapping('{' + Game.ID + '}')
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  void close(@PathVariable(Game.ID) final UUID gameId, @RequestParam final UUID requesterId) {
-    service.close(gameId, requesterId);
+  void close(final Authentication auth, @PathVariable(Game.ID) final UUID gameId) {
+    service.close(gameId, UUID.fromString(auth.getName()));
   }
 }

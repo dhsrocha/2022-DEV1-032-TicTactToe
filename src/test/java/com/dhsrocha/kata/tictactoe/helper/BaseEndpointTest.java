@@ -41,44 +41,45 @@ public abstract class BaseEndpointTest {
     return req.with(user(Auth.ADMIN).password(Auth.ADMIN));
   }
 
+  protected final MockHttpServletRequestBuilder withAuth(
+      @NonNull final UUID uuid, @NonNull final MockHttpServletRequestBuilder req) {
+    return req.with(user(uuid.toString()).password(uuid.toString()));
+  }
+
   protected final ResultActions game(@NonNull final UUID player) throws Exception {
-    final var req = withAdmin(post('/' + Game.TAG));
-    return mvc.perform(req.queryParam("type", TYPE).queryParam("requesterId", player.toString()));
+    return mvc.perform(withAuth(player, post('/' + Game.TAG)).queryParam("type", TYPE));
   }
 
-  protected final ResultActions join(@NonNull final UUID game, @NonNull final UUID requester)
+  protected final ResultActions join(@NonNull final UUID player, @NonNull final UUID game)
       throws Exception {
-    final var req = withAdmin(put('/' + Game.TAG + '/' + '{' + Game.ID + '}' + "/join", game));
-    return mvc.perform(req.param("type", TYPE).param("requesterId", requester.toString()));
+    return mvc.perform(
+        withAuth(player, put('/' + Game.TAG + '/' + '{' + Game.ID + '}' + "/join", game)));
   }
 
-  protected final ResultActions surrender(@NonNull final UUID game, @NonNull final UUID requester)
+  protected final ResultActions surrender(@NonNull final UUID player, @NonNull final UUID game)
       throws Exception {
-    final var req = withAdmin(put('/' + Game.TAG + '/' + '{' + Game.ID + '}' + "/surrender", game));
-    return mvc.perform(req.param("type", TYPE).param("requesterId", requester.toString()));
+    return mvc.perform(
+        withAuth(player, put('/' + Game.TAG + '/' + '{' + Game.ID + '}' + "/surrender", game)));
   }
 
-  protected final ResultActions close(@NonNull final UUID game, @NonNull final UUID player)
+  protected final ResultActions close(@NonNull final UUID player, @NonNull final UUID game)
       throws Exception {
-    final var req = withAdmin(delete('/' + Game.TAG + '/' + '{' + Game.ID + '}', game));
-    return mvc.perform(req.queryParam("requesterId", player.toString()));
+    return mvc.perform(withAuth(player, delete('/' + Game.TAG + '/' + '{' + Game.ID + '}', game)));
   }
 
   protected final ResultActions turn(
-      @NonNull final UUID game, @NonNull final UUID player, final int bitboard) throws Exception {
-    final var req = withAdmin(post('/' + Turn.TAG));
+      @NonNull final UUID player, @NonNull final UUID game, final int bitboard) throws Exception {
+    final var req = withAuth(player, post('/' + Turn.TAG));
     return mvc.perform(
-        req.queryParam(Game.ID, game.toString())
-            .queryParam("requesterId", player.toString())
-            .queryParam("bitboard", String.valueOf(bitboard)));
+        req.queryParam(Game.ID, game.toString()).queryParam("bitboard", String.valueOf(bitboard)));
   }
 
-  protected final void turn(@NonNull final UUID game, @NonNull final UUID player) throws Exception {
-    turn(game, player, 0b0_100_000_000__000_000_000);
+  protected final void turn(@NonNull final UUID player, @NonNull final UUID game) throws Exception {
+    turn(player, game, 0b0_100_000_000__000_000_000);
   }
 
-  protected final ResultActions notOverTurn(@NonNull final UUID game, @NonNull final UUID player)
+  protected final ResultActions notOverTurn(@NonNull final UUID player, @NonNull final UUID game)
       throws Exception {
-    return turn(game, player, 0b0_100_000_000__000_000_000);
+    return turn(player, game, 0b0_100_000_000__000_000_000);
   }
 }
