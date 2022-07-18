@@ -94,7 +94,7 @@ public class Game extends Domain implements Comparable<Game> {
    *
    * @return The invoking instance.
    */
-  public final @NonNull Game finish(@NonNull final Player lastRound) {
+  final @NonNull Game finish(@NonNull final Player lastRound) {
     return finish(lastRound, Boolean.FALSE);
   }
 
@@ -109,7 +109,7 @@ public class Game extends Domain implements Comparable<Game> {
    * @param surrendered Victory is given to the opponent if the last round's player surrenders.
    * @return The invoking instance.
    */
-  public final @NonNull Game finish(@NonNull final Player lastRound, final boolean surrendered) {
+  final @NonNull Game finish(@NonNull final Player lastRound, final boolean surrendered) {
     ExceptionCode.GAME_NOT_IN_PROGRESS.unless(Stage.IN_PROGRESS == stage);
     ExceptionCode.PLAYER_NOT_IN_GAME.unless(home == lastRound || null != away && away == lastRound);
     setWinner(surrendered ^ home == lastRound ? home : away == lastRound ? away : home);
@@ -118,22 +118,24 @@ public class Game extends Domain implements Comparable<Game> {
   }
 
   /**
-   * Process results of a {@link Bitboard}, according to provided {@link Type}.
+   * Updates instance according to a provided result, originated from a bitboard's computing
+   * process.
    *
-   * <p>< * @param bitboard Bitboard holding a state.
-   *
-   * @return Indicates if the instance's result corresponds to its end.
+   * @param result {@link Bitboard} computing process' outgoing {@link Bitboard.Result}.
+   * @return The processed instance:
+   *     <ul>
+   *       <li>Can turn the ongoing instance to the {@link Stage#FINISHED} state; and
+   *       <li>Potentially set a {@link Player} as the {@link #winner}.
+   *     </ul>
    */
-  final @NonNull boolean resultFrom(@NonNull final Bitboard bitboard) {
-    ExceptionCode.GAME_NOT_IN_PROGRESS.unless(stage == Stage.IN_PROGRESS);
-    final var result = type.resultOf(bitboard.process(type));
+  final @NonNull Game with(@NonNull final Bitboard.Result result) {
     if (null != away && result.isFinished()) {
       finish(Bitboard.Result.HOME == result ? home : away);
     }
     if (null != away && Bitboard.Result.NOT_OVER != result) {
       setStage(Game.Stage.FINISHED);
     }
-    return result.isFinished();
+    return this;
   }
 
   /**

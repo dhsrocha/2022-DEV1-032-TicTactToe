@@ -1,7 +1,6 @@
 package com.dhsrocha.kata.tictactoe.feature.game;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerTest;
 import com.dhsrocha.kata.tictactoe.helper.RandomStubExtension;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
-import com.dhsrocha.kata.tictactoe.vo.Bitboard;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard.Result;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -108,9 +107,9 @@ public final class GameTest implements RandomStubExtension {
     final var game =
         validStub().toBuilder().stage(Game.Stage.IN_PROGRESS).type(Type.TIC_TAC_TOE).build();
     // Act
-    final var finished = game.resultFrom(Bitboard.of(0b0_100_100_001__011_001_100));
+    final var changed = game.with(Result.NOT_OVER);
     // Assert
-    assertFalse(finished);
+    assertEquals(game, changed);
     assertEquals(Game.Stage.IN_PROGRESS, game.getStage());
   }
 
@@ -131,9 +130,9 @@ public final class GameTest implements RandomStubExtension {
             .type(Type.TIC_TAC_TOE)
             .build();
     // Act
-    final var finished = game.resultFrom(Bitboard.of(0b0_100_010_001__010_001_010));
+    final var changed = game.with(Result.HOME);
     // Assert
-    assertTrue(finished);
+    assertEquals(game, changed);
     assertEquals(game.getHome(), game.getWinner());
     assertEquals(Game.Stage.FINISHED, game.getStage());
   }
@@ -155,9 +154,9 @@ public final class GameTest implements RandomStubExtension {
             .type(Type.TIC_TAC_TOE)
             .build();
     // Act
-    final var finished = game.resultFrom(Bitboard.of(0b0_010_001_010__100_010_001));
+    final var changed = game.with(Result.AWAY);
     // Assert
-    assertTrue(finished);
+    assertEquals(game, changed);
     assertEquals(game.getAway(), game.getWinner());
     assertEquals(Game.Stage.FINISHED, game.getStage());
   }
@@ -179,9 +178,9 @@ public final class GameTest implements RandomStubExtension {
             .type(Type.TIC_TAC_TOE)
             .build();
     // Act
-    final var finished = game.resultFrom(Bitboard.of(0b0_010_011_100__101_100_011));
+    final var finished = game.with(Result.TIE);
     // Assert
-    assertFalse(finished);
+    assertEquals(game, finished);
     assertNull(game.getWinner());
     assertEquals(Game.Stage.FINISHED, game.getStage());
   }

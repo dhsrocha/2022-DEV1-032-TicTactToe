@@ -107,17 +107,23 @@ public abstract class TurnService implements BaseService<Search, Turn> {
 
       final var turns =
           repository.findAll((r, cq, cb) -> cb.equal(r.get(Search.GAME), game), LAST_CREATED);
-      turns.stream()
-          .max(Comparator.comparing(Domain::getCreatedAt))
-          .ifPresent(t -> TURN_LAST_SAME_PLAYER.unless(!t.getPlayer().equals(player)));
 
-      if (gameService.calculate(game, bitboard)) {
+      if (turns.isEmpty()) {
+        final var first = Turn.builder().state(bitboard).game(game).player(player).build();
+        return Optional.of(repository.save(first).getExternalId());
+      }
+
+      final var max = turns.stream().max(Comparator.comparing(Domain::getCreatedAt));
+      final var last =
+          max.filter(t -> !t.getPlayer().equals(player)).orElseThrow(TURN_LAST_SAME_PLAYER);
+      final var current =
+          Turn.builder().last(last).state(bitboard).game(game).player(player).build();
+
+      if (gameService.calculate(current)) {
         repository.deleteAll(turns);
         return Optional.empty();
       }
-
-      final var toCreate = Turn.builder().state(bitboard).game(game).player(player).build();
-      return Optional.of(repository.save(toCreate).getExternalId());
+      return Optional.of(repository.save(current).getExternalId());
     }
   }
 

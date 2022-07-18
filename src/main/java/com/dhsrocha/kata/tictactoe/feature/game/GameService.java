@@ -13,6 +13,7 @@ import com.dhsrocha.kata.tictactoe.feature.player.PlayerService;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard.Result;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,17 +36,16 @@ import org.springframework.validation.annotation.Validated;
 public abstract class GameService implements BaseService<Search, Game> {
 
   /**
-   * Process game result according to corresponding bitboard.
+   * Process a {@link Game}'s {@link Result} according to corresponding provided {@link Bitboard}.
    *
-   * @param game A game to process on:
+   * @param turn from the current action performed by a {@link Player}:
    *     <ul>
-   *       <li>Must be in {@link Game.Stage#IN_PROGRESS}.
+   *       <li>{@link Turn#getGame()} must be in {@link Game.Stage#IN_PROGRESS}.
    *     </ul>
    *
-   * @param bitboard Bitboard sent from some action.
    * @return Indicates if the instance's result corresponds to a {@link Game}'s end.
    */
-  public abstract boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard);
+  public abstract boolean calculate(@NonNull final Turn turn);
 
   /**
    * Opens a {@link Game}, by creating it as a resource, and adds the requesting {@link Player} as
@@ -159,10 +159,12 @@ public abstract class GameService implements BaseService<Search, Game> {
     }
 
     @Override
-    public boolean calculate(@NonNull final Game game, @NonNull final Bitboard bitboard) {
-      final var result = game.resultFrom(bitboard);
-      gameRepository.save(game);
-      return result;
+    public boolean calculate(@NonNull final Turn turn) {
+      ExceptionCode.TURN_IS_THE_FIRST.unless(null != turn.getLast());
+      ExceptionCode.GAME_NOT_IN_PROGRESS.unless(turn.getGame().getStage() == IN_PROGRESS);
+      final var result = turn.getGame().getType().resultOf(turn.validState());
+      gameRepository.save(turn.getGame().with(result));
+      return result.isFinished();
     }
 
     @Override

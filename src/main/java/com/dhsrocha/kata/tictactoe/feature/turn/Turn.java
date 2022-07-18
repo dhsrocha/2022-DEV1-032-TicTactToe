@@ -4,12 +4,14 @@ import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.player.Player;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
+import com.dhsrocha.kata.tictactoe.vo.Bitboard.Processed;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Comparator;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -44,7 +46,8 @@ public class Turn extends Domain implements Comparable<Turn> {
   private static final Comparator<Turn> COMPARATOR =
       Comparator.comparing(Turn::getGame)
           .thenComparing(Turn::getPlayer)
-          .thenComparing(Turn::getState);
+          .thenComparing(Turn::getState)
+          .thenComparing(Turn::getLast);
 
   /** Game where this action is taken. */
   @Schema(description = "Game where this action is taken.")
@@ -58,6 +61,18 @@ public class Turn extends Domain implements Comparable<Turn> {
   @Schema(description = "Represents the game board position in bitboard notation.")
   @Embedded
   private @NotNull @NonNull Bitboard state;
+  /** Last computed turn from current one. */
+  @Schema(hidden = true)
+  private transient @Transient Turn last;
+
+  /**
+   * Processes its internal state by checking for its validity.
+   *
+   * @return State with its validity checked.
+   */
+  public final Processed validState() {
+    return state.process(game.getType());
+  }
 
   @Override
   public final int compareTo(@NonNull final Turn toCompare) {

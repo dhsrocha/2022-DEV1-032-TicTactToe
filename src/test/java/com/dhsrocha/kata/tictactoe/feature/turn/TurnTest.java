@@ -32,9 +32,13 @@ public final class TurnTest implements RandomStubExtension {
   }
 
   public static Turn validStub() {
+    final var game = GameTest.validStub();
+    final var last =
+        Turn.builder().game(game).player(PlayerTest.validStub()).state(BitboardTest.validStub());
     return Turn.builder()
+        .last(last.build())
         .player(PlayerTest.validStub())
-        .game(GameTest.validStub())
+        .game(game)
         .state(BitboardTest.validStub())
         .build();
   }
