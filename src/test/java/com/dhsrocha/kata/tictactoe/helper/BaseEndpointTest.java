@@ -10,7 +10,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.dhsrocha.kata.tictactoe.feature.auth.Auth;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
 import com.dhsrocha.kata.tictactoe.feature.turn.Turn;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.net.URI;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 public abstract class BaseEndpointTest {
+
+  protected static final DateTimeFormatter EXPECTED_FORMAT =
+      DateTimeFormatter.ofPattern(StdDateFormat.DATE_FORMAT_STR_ISO8601);
 
   private static final String TYPE = "TIC_TAC_TOE";
 

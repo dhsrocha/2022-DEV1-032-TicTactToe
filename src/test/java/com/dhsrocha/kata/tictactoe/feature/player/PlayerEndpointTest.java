@@ -33,6 +33,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -66,125 +67,160 @@ final class PlayerEndpointTest extends BaseEndpointTest {
   @Autowired ObjectMapper mapper;
   @Autowired BaseRepository<Player> repository;
 
-  @Test
-  @DisplayName(
-      "GIVEN valid request body "
-          + "WHEN creating player resource "
-          + "THEN resource from extracted location is inactive "
-          + "AND other attributes are same as the one provided "
-          + "AND created at attribute is not null "
-          + "AND updated at attribute is null.")
-  void validBody_whenCreate_isActive_attrsAreSame_createdNotNull_updatedNull() throws Exception {
-    // Arrange
-    final var stub = PlayerTest.validStub();
-    // Act
-    final var location = create(stub);
-    // Assert
-    mvc.perform(withAdmin(get(location)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.active", is(Boolean.TRUE)))
-        .andExpect(jsonPath("$.username", is(stub.getUsername())))
-        .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
-        .andExpect(jsonPath("$.externalId").doesNotExist())
-        .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
-        .andExpect(jsonPath("$.updatedAt", is(nullValue())));
-  }
-
-  @Test
-  @DisplayName(
-      "GIVEN one created resource "
-          + "AND request with same username "
-          + "WHEN creating player resource "
-          + "THEN return HTTP status 422.")
-  void given1Created_andRequestWithSameUsername_whenCreate_thenReturnStatus422() throws Exception {
-    // Arrange
-    final var toCreateAndThenFail = PlayerTest.validStub();
-    create(toCreateAndThenFail);
-    final var body = mapper.writeValueAsString(toCreateAndThenFail);
-    // Act
-    final var req = post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
-    final var res = mvc.perform(withAdmin(req));
-    // Assert
-    res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
-  }
-
-  @ParameterizedTest
-  @MethodSource("invalidStubs")
-  @DisplayName(
-      "GIVEN invalid resource body "
-          + "WHEN creating player resource "
-          + "THEN return HTTP status 422.")
-  void givenInvalidRequest_whenCreate_thenReturnStatus422(Player invalidStub) throws Exception {
-    // Arrange
-    final var json = mapper.writeValueAsString(invalidStub);
-    // Act
-    final var req = post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json);
-    final var res = mvc.perform(withAdmin(req));
-    // Assert
-    res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
-  }
-
-  @Test
-  @DisplayName(
-      "GIVEN no created resource "
-          + "WHEN retrieving player resources "
-          + "THEN return an empty list.")
-  void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
-    // Act / Assert
-    mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.page.number", is(0)))
-        .andExpect(jsonPath("$.page.size", is(20)))
-        .andExpect(jsonPath("$.page.totalElements", is(0)))
-        .andExpect(jsonPath("$._embedded").doesNotExist());
-  }
-
-  @Test
-  @DisplayName(
-      "GIVEN three created resources "
-          + "WHEN retrieving all player resources "
-          + "THEN return resources with created identities.")
-  void given3created_whenRetrieve_thenHave3idsCreated() throws Exception {
-    // Arrange
-    final var set = Set.of(PlayerTest.validStub(), PlayerTest.validStub(), PlayerTest.validStub());
-    final var created = new HashSet<URI>();
-    for (final var c : set) {
-      created.add(create(c));
+  @Nested
+  @DisplayName("POST '" + BASE + "'")
+  class Create {
+    @Test
+    @DisplayName(
+        "GIVEN valid request body "
+            + "WHEN creating player resource "
+            + "THEN resource from extracted location is inactive "
+            + "AND other attributes are same as the one provided "
+            + "AND created at attribute is not null "
+            + "AND updated at attribute is null.")
+    void validBody_whenCreate_isActive_attrsAreSame_createdNotNull_updatedNull() throws Exception {
+      // Arrange
+      final var stub = PlayerTest.validStub();
+      // Act
+      final var location = create(stub);
+      // Assert
+      final var birthDate = is(stub.getBirthDate().format(EXPECTED_FORMAT));
+      mvc.perform(withAdmin(get(location)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.id", is(notNullValue(UUID.class))))
+          .andExpect(jsonPath("$.externalId").doesNotExist())
+          .andExpect(jsonPath("$.active", is(Boolean.TRUE)))
+          .andExpect(jsonPath("$.username", is(stub.getUsername())))
+          .andExpect(jsonPath("$.gender", is(stub.getGender().name())))
+          .andExpect(jsonPath("$.firstName", is(stub.getFirstName())))
+          .andExpect(jsonPath("$.lastName", is(stub.getLastName())))
+          .andExpect(jsonPath("$.birthDate", birthDate))
+          .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
+          .andExpect(jsonPath("$.updatedAt", is(nullValue())));
     }
-    final Function<URI, String> fun = p -> p.getPath().substring(p.getPath().lastIndexOf('/') + 1);
-    final var ids = created.stream().map(fun).toArray(String[]::new);
-    // Act
-    final var res =
-        mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
-    // Assert
-    final var usernames = set.stream().map(Player::getUsername).toArray();
-    res.andExpect(status().isOk())
-        .andExpect(content().contentType(APPLICATION_JSON))
-        .andExpect(jsonPath("$.page.number", is(0)))
-        .andExpect(jsonPath("$.page.size", is(20)))
-        .andExpect(jsonPath("$.page.totalElements", is(3)))
-        .andExpect(jsonPath("$.content..id", hasItems(ids)))
-        .andExpect(jsonPath("$.content..username", hasItems(usernames)))
-        .andExpect(jsonPath("$.content..active", everyItem(is(Boolean.TRUE))))
-        .andExpect(jsonPath("$.content..createdAt", everyItem(lessThan(now().toString()))))
-        .andExpect(jsonPath("$.content..updatedAt", everyItem(nullValue())));
+
+    @Test
+    @DisplayName(
+        "GIVEN one created resource "
+            + "AND request with same username "
+            + "WHEN creating player resource "
+            + "THEN return HTTP status 422.")
+    void given1Created_andRequestWithSameUsername_whenCreate_thenReturnStatus422()
+        throws Exception {
+      // Arrange
+      final var toCreateAndThenFail = PlayerTest.validStub();
+      create(toCreateAndThenFail);
+      final var body = mapper.writeValueAsString(toCreateAndThenFail);
+      // Act
+      final var req =
+          post(BASE).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
+      final var res = mvc.perform(withAdmin(req));
+      // Assert
+      res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidStubs")
+    @DisplayName(
+        "GIVEN invalid resource body "
+            + "WHEN creating player resource "
+            + "THEN return HTTP status 422.")
+    void givenInvalidRequest_whenCreate_thenReturnStatus422(Player invalidStub) throws Exception {
+      // Arrange
+      final var json = mapper.writeValueAsString(invalidStub);
+      // Act
+      final var req =
+          post(BASE).contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(json);
+      final var res = mvc.perform(withAdmin(req));
+      // Assert
+      res.andExpect(status().is(422)).andExpect(content().contentType(APPLICATION_JSON));
+    }
+
+    private static Stream<Player> invalidStubs() {
+      return Stream.of(
+          // username
+          PlayerTest.validStub().toBuilder().username("player2").build(),
+          // first name
+          PlayerTest.validStub().toBuilder().firstName("first").build(),
+          // last name
+          PlayerTest.validStub().toBuilder().lastName("last").build(),
+          // email
+          PlayerTest.validStub().toBuilder().email("string").build(),
+          // birthdate
+          PlayerTest.validStub().toBuilder()
+              .birthDate(OffsetDateTime.now().plusMinutes(1))
+              .build());
+    }
   }
 
-  @Test
-  @DisplayName(
-      "GIVEN random external id " //
-          + "WHEN finding player "
-          + "THEN return status 404.")
-  void givenRandomId_whenRetrieve_thenReturnStatus404_PLAYER_NOT_FOUND() throws Exception {
-    // Arrange
-    final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
-    // Act
-    final var res =
-        mvc.perform(withAdmin(req).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
-    // Assert
-    res.andExpect(status().isNotFound());
+  @Nested
+  @DisplayName("GET '" + BASE + "'")
+  class Retrieve {
+    @Test
+    @DisplayName(
+        "GIVEN no created resource "
+            + "WHEN retrieving player resources "
+            + "THEN return an empty list.")
+    void givenNoCreated_whenRetrieve_returnEmptyList() throws Exception {
+      // Act / Assert
+      mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.page.number", is(0)))
+          .andExpect(jsonPath("$.page.size", is(20)))
+          .andExpect(jsonPath("$.page.totalElements", is(0)))
+          .andExpect(jsonPath("$._embedded").doesNotExist());
+    }
+
+    @Test
+    @DisplayName(
+        "GIVEN three created resources "
+            + "WHEN retrieving all player resources "
+            + "THEN return active resources with the created identities.")
+    void given3created_whenRetrieve_thenReturn3activeIdsCreated() throws Exception {
+      // Arrange
+      final var set =
+          Set.of(PlayerTest.validStub(), PlayerTest.validStub(), PlayerTest.validStub());
+      final var created = new HashSet<URI>();
+      for (final var c : set) {
+        created.add(create(c));
+      }
+      final Function<URI, String> fun =
+          p -> p.getPath().substring(p.getPath().lastIndexOf('/') + 1);
+      final var ids = created.stream().map(fun).toArray(String[]::new);
+      // Act
+      final var res =
+          mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+      // Assert
+      final var usernames = set.stream().map(Player::getUsername).toArray();
+      final var birthDate = everyItem(lessThan(now().format(EXPECTED_FORMAT)));
+      res.andExpect(status().isOk())
+          .andExpect(content().contentType(APPLICATION_JSON))
+          .andExpect(jsonPath("$.page.number", is(0)))
+          .andExpect(jsonPath("$.page.size", is(20)))
+          .andExpect(jsonPath("$.page.totalElements", is(3)))
+          .andExpect(jsonPath("$.content..id", hasItems(ids)))
+          .andExpect(jsonPath("$.content..username", hasItems(usernames)))
+          .andExpect(jsonPath("$.content..active", everyItem(is(Boolean.TRUE))))
+          .andExpect(jsonPath("$.content..createdAt", birthDate))
+          .andExpect(jsonPath("$.content..updatedAt", everyItem(nullValue())));
+    }
+
+    @Test
+    @DisplayName(
+        "GIVEN random external id " //
+            + "WHEN finding player "
+            + "THEN return status 404.")
+    void givenRandomId_whenRetrieve_thenReturnStatus404_PLAYER_NOT_FOUND() throws Exception {
+      // Arrange
+      final var req = get(BASE + '{' + Player.ID + '}', UUID.randomUUID());
+      // Act
+      final var res =
+          mvc.perform(withAdmin(req).contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
+      // Assert
+      res.andExpect(status().isNotFound());
+    }
   }
 
   @Test
@@ -199,13 +235,21 @@ final class PlayerEndpointTest extends BaseEndpointTest {
     final var modified = PlayerTest.validStub();
     final var location = create(toCreate);
     final var toUpdate =
-        toCreate.toBuilder().active(Boolean.TRUE).username(modified.getUsername()).build();
+        toCreate.toBuilder()
+            .active(Boolean.TRUE)
+            .username(modified.getUsername())
+            .gender(modified.getGender())
+            .firstName(modified.getFirstName())
+            .lastName(modified.getLastName())
+            .birthDate(modified.getBirthDate())
+            .build();
     final var body = mapper.writeValueAsString(toUpdate);
     // Act
     final var req =
         put(location).content(body).contentType(APPLICATION_JSON).accept(APPLICATION_JSON);
     mvc.perform(withAdmin(req)).andExpect(status().isNoContent());
     // Assert
+    final var birthDate = is(toUpdate.getBirthDate().format(EXPECTED_FORMAT));
     mvc.perform(withAdmin(get(BASE)).contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(APPLICATION_JSON))
@@ -221,7 +265,7 @@ final class PlayerEndpointTest extends BaseEndpointTest {
         .andExpect(jsonPath("$.firstName", is(toUpdate.getFirstName())))
         .andExpect(jsonPath("$.lastName", is(toUpdate.getLastName())))
         .andExpect(jsonPath("$.email", is(toUpdate.getEmail())))
-        .andExpect(jsonPath("$.birthDate", is(toUpdate.getBirthDate().toString())))
+        .andExpect(jsonPath("$.birthDate", birthDate))
         .andExpect(jsonPath("$.createdAt", is(notNullValue(OffsetDateTime.class))))
         .andExpect(jsonPath("$.updatedAt", is(notNullValue(OffsetDateTime.class))));
   }
@@ -274,19 +318,5 @@ final class PlayerEndpointTest extends BaseEndpointTest {
     final var res =
         mvc.perform(auth).andExpect(status().isCreated()).andExpect(header().exists(LOCATION));
     return URI.create(Objects.requireNonNull(res.andReturn().getResponse().getHeader(LOCATION)));
-  }
-
-  private static Stream<Player> invalidStubs() {
-    return Stream.of(
-        // username
-        PlayerTest.validStub().toBuilder().username("player2").build(),
-        // first name
-        PlayerTest.validStub().toBuilder().firstName("first").build(),
-        // last name
-        PlayerTest.validStub().toBuilder().lastName("last").build(),
-        // email
-        PlayerTest.validStub().toBuilder().email("string").build(),
-        // birthdate
-        PlayerTest.validStub().toBuilder().birthDate(OffsetDateTime.now().plusMinutes(1)).build());
   }
 }

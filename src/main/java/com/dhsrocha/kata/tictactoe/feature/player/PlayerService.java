@@ -3,9 +3,11 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 import com.dhsrocha.kata.tictactoe.base.BaseService;
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.auth.Auth.Role;
+import com.dhsrocha.kata.tictactoe.feature.player.Player.Gender;
 import com.dhsrocha.kata.tictactoe.feature.player.PlayerService.Search;
 import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
@@ -89,7 +91,12 @@ public abstract class PlayerService implements BaseService<Search, Player> {
               cb.or(
                   cb.conjunction(),
                   cb.equal(r.get(Search.ACTIVE), criteria.active),
-                  cb.like(r.get(Search.USERNAME), criteria.username + '%')),
+                  cb.like(r.get(Search.USERNAME), criteria.username + '%'),
+                  cb.equal(r.get(Search.GENDER), criteria.gender),
+                  cb.like(r.get(Search.EMAIL), criteria.email + '%'),
+                  cb.like(r.get(Search.FIRST_NAME), criteria.firstName + '%'),
+                  cb.like(r.get(Search.LAST_NAME), criteria.lastName + '%'),
+                  cb.equal(r.get(Search.BIRTH_DATE), criteria.birthDate)),
           pageable);
     }
 
@@ -154,7 +161,18 @@ public abstract class PlayerService implements BaseService<Search, Player> {
   public static class Search {
     private static final String USERNAME = "username";
     private static final String ACTIVE = "active";
+    private static final String GENDER = "gender";
+    private static final String EMAIL = "email";
+    private static final String FIRST_NAME = "firstName";
+    private static final String LAST_NAME = "lastName";
+    private static final String BIRTH_DATE = "birthDate";
+
     private Boolean active;
     private String username;
+    private Gender gender;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private OffsetDateTime birthDate;
   }
 }

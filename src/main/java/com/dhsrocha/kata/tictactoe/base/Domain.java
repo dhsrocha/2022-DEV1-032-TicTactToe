@@ -1,8 +1,10 @@
 package com.dhsrocha.kata.tictactoe.base;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -22,8 +24,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 /**
  * Abstraction for the domain layer.<br>
@@ -92,7 +92,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @JsonProperty(access = Access.READ_ONLY)
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
-  @DateTimeFormat(iso = ISO.DATE_TIME)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = StdDateFormat.DATE_FORMAT_STR_ISO8601)
   private OffsetDateTime createdAt;
 
   /** Record's last update timestamp. Null as initial value. */
@@ -103,7 +103,7 @@ public abstract class Domain extends AbstractPersistable<Long> {
   @JsonProperty(access = Access.READ_ONLY)
   @LastModifiedDate
   @Column(name = "updated_at")
-  @DateTimeFormat(iso = ISO.DATE_TIME)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = StdDateFormat.DATE_FORMAT_STR_ISO8601)
   private OffsetDateTime updatedAt;
 
   @Schema(hidden = true)

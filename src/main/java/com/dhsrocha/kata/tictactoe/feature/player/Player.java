@@ -2,6 +2,8 @@ package com.dhsrocha.kata.tictactoe.feature.player;
 
 import com.dhsrocha.kata.tictactoe.base.Domain;
 import com.dhsrocha.kata.tictactoe.feature.game.Game;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -110,6 +112,7 @@ public class Player extends Domain implements Comparable<Player> {
   @Past
   @NotNull
   @Column(name = "birth_date", nullable = false)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = StdDateFormat.DATE_FORMAT_STR_ISO8601)
   private @NonNull OffsetDateTime birthDate;
   /** Game being or already played. */
   @Schema(description = "Game being or already played.")
