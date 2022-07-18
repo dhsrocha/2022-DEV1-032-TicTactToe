@@ -22,14 +22,19 @@ import lombok.NonNull;
 enum Type implements Processor, Validator {
   TIC_TAC_TOE(2, 9) {
     @Override
-    public Optional<ExceptionCode> validate(@NonNull final Bitboard bitboard) {
+    public Optional<ExceptionCode> validate(
+        @NonNull final Bitboard last, @NonNull final Bitboard current) {
       final var self = TIC_TAC_TOE;
-      final var set = BitSet.valueOf(new long[] {bitboard.getState()});
-      if (set.cardinality() > self.getTiles()) {
+      final var bitLast = BitSet.valueOf(new long[] {last.getState()});
+      final var bitCurrent = BitSet.valueOf(new long[] {current.getState()});
+      if (Math.abs(bitCurrent.cardinality() - bitLast.cardinality()) > 1) {
+        return Optional.of(ExceptionCode.BITBOARD_EXCESSIVE_BITS_PER_ROUND);
+      }
+      if (bitCurrent.cardinality() > self.getTiles()) {
         return Optional.of(ExceptionCode.BITBOARD_EXCESSIVE_BITS);
       }
-      final var home = set.get(0, self.getTiles());
-      final var away = set.get(self.getTiles(), self.getTiles() * self.getStates());
+      final var home = bitCurrent.get(0, self.getTiles());
+      final var away = bitCurrent.get(self.getTiles(), self.getTiles() * self.getStates());
       if (home.intersects(away)) {
         return Optional.of(ExceptionCode.BITBOARD_PIECE_IN_SAME_TILE);
       }

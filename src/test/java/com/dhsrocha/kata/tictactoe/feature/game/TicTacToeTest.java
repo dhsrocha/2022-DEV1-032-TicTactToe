@@ -8,6 +8,7 @@ import com.dhsrocha.kata.tictactoe.system.ExceptionCode;
 import com.dhsrocha.kata.tictactoe.vo.Bitboard;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -31,8 +32,9 @@ final class TicTacToeTest implements RandomStubExtension {
   void expectedResult(final int state, final Bitboard.Result expected) {
     // Arrange
     final var rule = Type.TIC_TAC_TOE;
+    final var valid = Bitboard.of(state);
     // Act
-    final var actual = rule.resultOf(Bitboard.of(state).process(rule));
+    final var actual = rule.resultOf(Bitboard.of(state).processWith(valid, rule));
     // Assert
     assertEquals(expected, actual);
   }
@@ -46,11 +48,31 @@ final class TicTacToeTest implements RandomStubExtension {
   void invalidStub(final int invalidStub, final ExceptionCode code) {
     // Arrange
     final var rule = Type.TIC_TAC_TOE;
-    final var bitboard = Bitboard.of(invalidStub);
+    final var invalid = Bitboard.of(invalidStub);
     // Act
-    final var ex = assertThrows(HttpClientErrorException.class, () -> bitboard.process(rule));
+    final var ex =
+        assertThrows(HttpClientErrorException.class, () -> invalid.processWith(invalid, rule));
     // Assert
     assertEquals(HttpStatus.BAD_REQUEST.value() + " " + code.name(), ex.getMessage());
+  }
+
+  @Test
+  @DisplayName(
+      "GIVEN a valid bitboard "
+          + "AND another valid bitboard with more two bits than the previous one "
+          + "WHEN calculating a bitboard with tic-tac-toe rule set "
+          + "THEN ExceptionCode#BITBOARD_EXCESSIVE_BITS_PER_ROUND is thrown.")
+  void invalidStub_betweenLastAndCurrent() {
+    // Arrange
+    final var rule = Type.TIC_TAC_TOE;
+    final var code = ExceptionCode.BITBOARD_EXCESSIVE_BITS_PER_ROUND.name();
+    final var last = Bitboard.of(0b0__000_000_001);
+    final var current = Bitboard.of(0b0__100_100_100);
+    // Act
+    final var ex =
+        assertThrows(HttpClientErrorException.class, () -> current.processWith(last, rule));
+    // Assert
+    assertEquals(HttpStatus.BAD_REQUEST.value() + " " + code, ex.getMessage());
   }
 
   private static Stream<Arguments> validStubsAndResults() {

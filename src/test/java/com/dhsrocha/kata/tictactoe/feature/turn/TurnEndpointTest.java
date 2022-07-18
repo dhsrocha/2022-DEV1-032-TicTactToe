@@ -144,7 +144,7 @@ final class TurnEndpointTest extends BaseEndpointTest {
       final var game = idFrom(res);
       join(joiner, game).andExpect(status().isNoContent());
       // Act
-      notOverTurn(opener, game).andExpect(status().isCreated());
+      turn(opener, game, 0b0_000_101_010__101_000_000).andExpect(status().isCreated());
       turn(joiner, game, 0b0_000_101_010__111_000_000).andExpect(status().isNoContent());
       fromLocation(res)
           .andExpect(status().isOk())
@@ -245,21 +245,30 @@ final class TurnEndpointTest extends BaseEndpointTest {
     void given2GamesWithTurns_whenCreateWinTurn_thenReturn204_andRelatedRemoved_andUnrelatedAreNot()
         throws Exception {
       // Arrange
+      final var turn1 = 0b0_000_000_000__000_010_000;
+      final var turn2 = 0b0_000_100_000__000_010_000;
+      final var turn3 = 0b0_000_100_000__100_010_000;
+      final var turn4 = 0b0_010_100_000__100_010_000;
+      final var turn5 = 0b0_010_100_000__100_010_001;
+
       final var opener1 = player().getExternalId();
       final var joiner1 = player().getExternalId();
       final var game1 = idFrom(game(opener1));
       join(joiner1, game1).andExpect(status().isNoContent());
-      notOverTurn(joiner1, game1);
+      turn(opener1, game1, turn1).andExpect(status().isCreated());
+      turn(joiner1, game1, turn2).andExpect(status().isCreated());
+      turn(opener1, game1, turn3).andExpect(status().isCreated());
+      turn(joiner1, game1, turn4).andExpect(status().isCreated());
 
       final var opener2 = player().getExternalId();
       final var joiner2 = player().getExternalId();
       final var game2 = idFrom(game(opener2));
       join(joiner2, game2).andExpect(status().isNoContent());
-      final var toPreserve1 = notOverTurn(opener2, game2).andExpect(status().isCreated());
-      final var toPreserve2 = notOverTurn(joiner2, game2).andExpect(status().isCreated());
-      final var toPreserve3 = notOverTurn(opener2, game2).andExpect(status().isCreated());
+      final var toPreserve1 = turn(opener2, game2, turn1).andExpect(status().isCreated());
+      final var toPreserve2 = turn(joiner2, game2, turn2).andExpect(status().isCreated());
+      final var toPreserve3 = turn(opener2, game2, turn3).andExpect(status().isCreated());
       // Act
-      turn(opener1, game1, 0b0_100_010_001__000_100_100).andExpect(status().isNoContent());
+      turn(opener1, game1, turn5).andExpect(status().isNoContent());
       // Assert
       fromLocation(toPreserve3)
           .andExpect(status().isOk())

@@ -49,7 +49,8 @@ public enum ExceptionCode implements Supplier<RuntimeException> {
   BITBOARD_EXCESSIVE_BITS(HttpStatus.BAD_REQUEST),
   /** {@link Bitboard} has overlapping bits in its subsets. */
   BITBOARD_PIECE_IN_SAME_TILE(HttpStatus.BAD_REQUEST),
-  ;
+  /** {@link Bitboard} has excessive number of bit between two contiguous bitboards. */
+  BITBOARD_EXCESSIVE_BITS_PER_ROUND(HttpStatus.BAD_REQUEST);
   /** Corresponding HTTP status. */
   private final HttpStatus code;
 

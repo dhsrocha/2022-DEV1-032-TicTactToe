@@ -27,8 +27,7 @@ import lombok.Setter;
  * @author <a href="mailto:dhsrocha.dev@gmail.com">Diego Rocha</a>
  */
 @Embeddable
-@Schema(
-    description = "Representation of board's state of a Game in the moment an Turn is occurred.")
+@Schema(description = "Representation of board's state of a Game in the moment a Turn is occurred.")
 @Data
 @Setter(AccessLevel.NONE)
 @AllArgsConstructor(staticName = "of")
@@ -52,8 +51,9 @@ public class Bitboard implements Serializable, Comparable<Bitboard> {
    * @param validator Validator engine.
    * @return Bitboard in is valid and processed state.
    */
-  public final Processed process(@NonNull final Validator validator) {
-    return new Processed(state, validator);
+  public final Processed processWith(
+      @NonNull final Bitboard last, @NonNull final Validator validator) {
+    return new Processed(last, state, validator);
   }
 
   /**
@@ -83,10 +83,10 @@ public class Bitboard implements Serializable, Comparable<Bitboard> {
    */
   public static final class Processed extends Bitboard {
 
-    private Processed(final long state, @NonNull final Validator validator) {
-      super(state);
+    private Processed(final Bitboard last, final long current, @NonNull final Validator validator) {
+      super(current);
       ExceptionCode.BITBOARD_UNSET_STATE.unless(getState() != 0);
-      validator.validate(this).ifPresent(ExceptionCode::trigger);
+      validator.validate(last, this).ifPresent(ExceptionCode::trigger);
     }
   }
 
@@ -101,10 +101,11 @@ public class Bitboard implements Serializable, Comparable<Bitboard> {
      * Calculates legal conditions, from the provided bitboard's state, according to a {@link
      * Game}'s set of rules.
      *
-     * @param state A {@link Game}'s board in bitboard notation.
-     * @return .
+     * @param last Last round's state from a {@link Game}'s board, in bitboard notation.
+     * @param current Current state from a {@link Game}'s board, in bitboard notation.
+     * @return Optionally first exception retrieved.
      */
-    Optional<ExceptionCode> validate(@NonNull final Bitboard state);
+    Optional<ExceptionCode> validate(@NonNull final Bitboard last, @NonNull final Bitboard current);
   }
 
   /**

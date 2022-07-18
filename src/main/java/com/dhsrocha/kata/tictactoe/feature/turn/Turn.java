@@ -71,7 +71,7 @@ public class Turn extends Domain implements Comparable<Turn> {
    * @return State with its validity checked.
    */
   public final Processed validState() {
-    return state.process(game.getType());
+    return state.processWith(last.getState(), game.getType());
   }
 
   @Override
