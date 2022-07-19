@@ -50,6 +50,7 @@
   </issueManagement>
 
   <modules>
+    <module>mods/client</module>
     <module>mods/server</module>
   </modules>
 
